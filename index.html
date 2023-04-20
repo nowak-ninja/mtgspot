@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+    <script>
+        var results = [];
+
+        // var currentTime = new Date().toISOString();
+        // var user_id = CryptoJS.SHA1(currentTime).toString();
+        // console.log('user_id:', user_id);
+
+        // $.ajax({
+        //     url: 'https://mtgspot.cn-panel.pl/cart?lang=pl&user_id=' + user_id, 
+        //     type: 'GET',
+        //     success: function (response) {
+        //         console.log(response);
+        //     }
+        // });
+
+        function sendRequests() {
+            $('#result').html('');
+            var lines = $('#myTextarea').val().split('\n');
+
+            $.each(lines, function (index, value) {
+                var cardNameTrimmed = value.trim().replace(/^\d+\s*/, '');
+                $.ajax({
+                    url: 'https://mtgspot.cn-panel.pl/products?s_title=' + cardNameTrimmed + '&limit=25&offset=0&order_by=title&sort_by=asc',
+                    type: 'GET',
+                    success: function (response) {
+                        if (response.count > 0) {
+                            var data = response.data.filter(function(item) {
+                                return item.stock !== 0;
+                            });
+
+                            if (data.length > 0) {
+                                data.sort((a, b) => a.price - b.price);
+
+                                var cheapestCard = data[0];
+
+                                $('#result').append('<a href="https://mtgspot.pl/single/single/' + cheapestCard.title + '/' + cheapestCard.id_product + '/' + cheapestCard.id_article +'" target="_blank">' + cheapestCard.title + ' - ' + cheapestCard.price + '</a><br />');
+                                results.push(cheapestCard);
+                            } else {
+                                $('#result').append('<i>' + cardNameTrimmed + '</i><br />')
+                            }
+                        } else {
+                            $('#result').append('<i>' + cardNameTrimmed + '</i><br />')
+                        }
+                    },
+                });
+            });
+        }
+
+        function addToBasket() {
+            var user_id = $('#user_id').val();
+            if (user_id == '') {
+                alert('Brak user_id!')
+                return;
+            }
+
+            if (results.length == 0) {
+                alert('Nie znaleziono kart na stanie! :(');
+                return;
+            }
+
+            $.each(results, function (index, value) {
+                $.ajax({
+                    url: 'https://mtgspot.cn-panel.pl/cart/add/' + value.id_article + '?lang=pl&user_id=' + user_id,
+                    type: 'POST',
+                    data: {
+                        'quantity': 1
+                    },
+                    success: function (response) {
+                        console.log(response);
+                    }
+                })
+            });
+
+            alert('Przejdz teraz do https://mtgspot.pl/koszyk/krok-1');
+        }
+    </script>
+</head>
+
+<body>
+    <div>
+        <input id="user_id" type="text" size="55" placeholder="user_id">
+        <br />
+        <textarea id="myTextarea" rows="25" cols="60" placeholder="Black Lotus"></textarea>
+        <br />
+        <button onclick="sendRequests()">Wyślij zapytania</button>
+        <button id="addToBasket" onclick="addToBasket()">Dodaj do koszyka</button>
+        <hr />
+        <div id="result"></div>
+    </div>
+</body>
+
+</html>
