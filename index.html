@@ -4,21 +4,9 @@
 <head>
     <meta charset="utf-8">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
     <script>
+        var api_key = 'b3d39321-5dc4-4298-98c6-0399432a948b';
         var results = [];
-
-        // var currentTime = new Date().toISOString();
-        // var user_id = CryptoJS.SHA1(currentTime).toString();
-        // console.log('user_id:', user_id);
-
-        // $.ajax({
-        //     url: 'https://mtgspot.cn-panel.pl/cart?lang=pl&user_id=' + user_id, 
-        //     type: 'GET',
-        //     success: function (response) {
-        //         console.log(response);
-        //     }
-        // });
 
         function sendRequests() {
             $('#result').html('');
@@ -39,7 +27,6 @@
                                 data.sort((a, b) => a.price - b.price);
 
                                 var cheapestCard = data[0];
-
                                 var urlElements = [
                                     cheapestCard.expansion_name,
                                     cheapestCard.id_expansion,
@@ -75,10 +62,14 @@
 
             $.each(results, function (index, value) {
                 $.ajax({
-                    url: 'https://mtgspot.cn-panel.pl/cart/add/' + value.id_article + '?lang=pl&user_id=' + user_id,
+                    url: 'https://gateway.mtgspot.pl/api/shop/carts/single',
                     type: 'POST',
                     data: {
-                        'quantity': 1
+                        'quantity': 1,
+                        'id_article': value.id_article
+                    },
+                    headers: {
+                        'x-api-key': api_key
                     },
                     success: function (response) {
                         console.log(response);
