@@ -49,12 +49,6 @@
         }
 
         function addToBasket() {
-            var user_id = $('#user_id').val();
-            if (user_id == '') {
-                alert('Brak user_id!')
-                return;
-            }
-
             if (results.length == 0) {
                 alert('Nie znaleziono kart na stanie! :(');
                 return;
