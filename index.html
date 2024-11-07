@@ -62,8 +62,11 @@
             $('#addToBasketButton').prop('disabled', true);
             $('#totalPrice').text('Suma: 0.00 PLN');
 
-            results = [];
             var lines = $('#cards').val().trim().split('\n');
+            var numRequests = lines.length;
+            var completedRequests = 0;
+
+            results = new Array(numRequests); // Initialize results array
 
             $.each(lines, function (index, value) {
                 var cardNameTrimmed = value.trim().replace(/^\d+\s*/, '');
@@ -92,42 +95,77 @@
                                     cheapestCard.id_article
                                 ];
 
-                                results.push(cheapestCard);
-                                var index = results.length - 1;
-
-                                $('#resultBody').append(
-                                    '<tr>' +
-                                        '<td>' +
-                                            '<a class="tooltip" href="https://mtgspot.pl/single/' + urlElements.join('/') + '" target="_blank">' +
-                                                cheapestCard.title +
-                                                '<span><img alt="" src="' + cheapestCard.image + '" /></span>' +
-                                            '</a>' +
-                                        '</td>' +
-                                        '<td>' + price.toFixed(2) + ' PLN</td>' +
-                                        '<td><input type="checkbox" class="add-to-basket" data-index="' + index + '" data-price="' + price + '" checked></td>' +
-                                    '</tr>'
-                                );
-
-                                updateTotalPrice();
+                                results[index] = {
+                                    success: true,
+                                    data: cheapestCard,
+                                    price: price,
+                                    url: 'https://mtgspot.pl/single/' + urlElements.join('/')
+                                };
                             } else {
-                                $('#resultBody').append('<tr><td colspan="3"><i style="color: #db9494">' + cardNameTrimmed + '</i></td></tr>');
+                                results[index] = {
+                                    success: false,
+                                    cardName: cardNameTrimmed
+                                };
                             }
                         } else {
-                            $('#resultBody').append('<tr><td colspan="3"><i style="color: #db9494">' + cardNameTrimmed + '</i></td></tr>');
+                            results[index] = {
+                                success: false,
+                                cardName: cardNameTrimmed
+                            };
                         }
 
-                        if (results.length > 0) {
-                            $('#addToBasketButton').prop('disabled', false);
+                        completedRequests++;
+
+                        if (completedRequests === numRequests) {
+                            renderResults();
                         }
                     }
                 });
             });
         }
 
+        function renderResults() {
+            $('#resultBody').html('');
+            updateTotalPrice();
+
+            var hasSuccess = false;
+
+            results.forEach(function(result, index) {
+                if (result && result.success) {
+                    hasSuccess = true;
+                    var cheapestCard = result.data;
+                    var price = result.price;
+
+                    $('#resultBody').append(
+                        '<tr>' +
+                            '<td>' +
+                                '<a class="tooltip" href="' + result.url + '" target="_blank">' +
+                                    cheapestCard.title +
+                                    '<span><img alt="" src="' + cheapestCard.image + '" /></span>' +
+                                '</a>' +
+                            '</td>' +
+                            '<td>' + price.toFixed(2) + ' PLN</td>' +
+                            '<td><input type="checkbox" class="add-to-basket" data-index="' + index + '" data-price="' + price + '" checked></td>' +
+                        '</tr>'
+                    );
+                } else {
+                    $('#resultBody').append('<tr><td colspan="3"><i style="color: #db9494">' + (result ? result.cardName : '') + '</i></td></tr>');
+                }
+            });
+
+            updateTotalPrice();
+
+            if (hasSuccess) {
+                $('#addToBasketButton').prop('disabled', false);
+            } else {
+                $('#addToBasketButton').prop('disabled', true);
+            }
+        }
+
         function addToBasket() {
             $('.add-to-basket:checked').each(function() {
                 var index = $(this).data('index');
-                var value = results[index];
+                var value = results[index].data;
 
                 $.ajax({
                     url: 'https://gateway.mtgspot.pl/api/shop/carts/single',
