@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
+        var bearer_token = 'Bearer f7199f36032451871135ef0c64b79fe055842aca'
         var api_key = 'b3d39321-5dc4-4298-98c6-0399432a948b';
         var results = [];
 
@@ -63,6 +64,7 @@
                         'id_article': value.id_article
                     },
                     headers: {
+                        'Authorization': bearer_token,
                         'x-api-key': api_key
                     },
                     success: function (response) {
@@ -71,7 +73,7 @@
                 })
             });
 
-            alert('Przejdz teraz do https://mtgspot.pl/koszyk/krok-1');
+            alert('Przejdź teraz do https://mtgspot.pl/order');
         }
     </script>
 </head>
@@ -83,7 +85,7 @@
         <textarea id="myTextarea" rows="25" cols="60" placeholder="Black Lotus"></textarea>
         <br />
         <button onclick="sendRequests()">Wyślij zapytania</button>
-        <button id="addToBasket" onclick="addToBasket()">Dodaj do koszyka</button>
+        <button onclick="addToBasket()">Dodaj do koszyka</button>
         <hr />
         <div id="result"></div>
     </div>
