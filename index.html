@@ -3,6 +3,18 @@
 
 <head>
     <meta charset="utf-8">
+    <style>
+    	table, th, td {
+    		border: 1px solid black;
+    		border-style: dotted;
+    		border-collapse: collapse;
+    		padding: 5px;
+    	}
+    	
+    	#addToBasketButton {
+    		background-color: #bbeebb;
+    	}
+    </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
         const bearer_token = 'Bearer f7199f36032451871135ef0c64b79fe055842aca';
@@ -46,10 +58,10 @@
                                 $('#result').append('<tr><td><a href="https://mtgspot.pl/single/' + urlElements.join('/') + '" target="_blank">' + cheapestCard.title + '</a><td>' + cheapestCard.price + ' ' + currency);
                                 results.push(cheapestCard);
                             } else {
-                                $('#result').append('<tr><td><i style="color: #999">' + cardNameTrimmed + '</i>');
+                                $('#result').append('<tr><td colspan="2"><i style="color: #999">' + cardNameTrimmed + '</i>');
                             }
                         } else {
-                            $('#result').append('<tr><td><i style="color: #999">' + cardNameTrimmed + '</i>');
+                            $('#result').append('<tr><td colspan="2"><i style="color: #999">' + cardNameTrimmed + '</i>');
                         }
 
                         if (results.length > 0) {
