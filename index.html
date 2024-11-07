@@ -40,7 +40,15 @@
 
                                 var cheapestCard = data[0];
 
-                                $('#result').append('<a href="https://mtgspot.pl/single/' + cheapestCard.expansion_name + '/' + cheapestCard.id_expansion + '/' + cheapestCard.title + '/' + cheapestCard.id_product + '/' + cheapestCard.id_article + '" target="_blank">' + cheapestCard.title + ' - ' + cheapestCard.price + '</a><br />');
+                                var urlElements = [
+                                    cheapestCard.expansion_name,
+                                    cheapestCard.id_expansion,
+                                    cheapestCard.title,
+                                    cheapestCard.id_product,
+                                    cheapestCard.id_article
+                                ]
+
+                                $('#result').append('<a href="https://mtgspot.pl/single/' + urlElements.join('/') + '" target="_blank">' + cheapestCard.title + ' - ' + cheapestCard.price + '</a><br />');
                                 results.push(cheapestCard);
                             } else {
                                 $('#result').append('<i>' + cardNameTrimmed + '</i><br />')
