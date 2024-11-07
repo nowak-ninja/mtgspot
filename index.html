@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>MTG Spot cheapest singles</title>
+    <title>MTG Spot Cheapest Singles</title>
     <style>
         table, th, td {
             border: 0px;
@@ -52,81 +52,109 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     <script>
-		const bearer_token = 'Bearer f7199f36032451871135ef0c64b79fe055842aca';
-		const api_key = 'b3d39321-5dc4-4298-98c6-0399432a948b';
-		const currency = 'PLN';
+        const bearer_token = 'Bearer f7199f36032451871135ef0c64b79fe055842aca';
+        const api_key = 'b3d39321-5dc4-4298-98c6-0399432a948b';
 
-		var results = [];
+        var results = [];
 
-		function sendRequests() {
-			$('#result').html('');
-			$('#addToBasketButton').prop('disabled', true);
+        function sendRequests() {
+            $('#resultBody').html('');
+            $('#addToBasketButton').prop('disabled', true);
+            $('#totalPrice').text('Total: 0.00 PLN');
 
-			results = [];
-			var lines = $('#cards').val().trim().split('\n');
+            results = [];
+            var lines = $('#cards').val().trim().split('\n');
 
-			$.each(lines, function (index, value) {
-				var cardNameTrimmed = value.trim().replace(/^\d+\s*/, '');
-				console.log('Looking for:', cardNameTrimmed);
+            $.each(lines, function (index, value) {
+                var cardNameTrimmed = value.trim().replace(/^\d+\s*/, '');
+                console.log('Looking for:', cardNameTrimmed);
 
-				$.ajax({
-					url: 'https://mtgspot.cn-panel.pl/products?s_title=' + cardNameTrimmed + '&limit=300&offset=0&order_by=title&sort_by=asc',
-					type: 'GET',
-					success: function (response) {
-						if (response.count > 0) {
-							var data = response.data.filter(function(item) {
-								return item.stock !== 0;
-							});
+                $.ajax({
+                    url: 'https://mtgspot.cn-panel.pl/products?s_title=' + encodeURIComponent(cardNameTrimmed) + '&limit=300&offset=0&order_by=title&sort_by=asc',
+                    type: 'GET',
+                    success: function (response) {
+                        if (response.count > 0) {
+                            var data = response.data.filter(function(item) {
+                                return item.stock !== 0;
+                            });
 
-							if (data.length > 0) {
-								data.sort((a, b) => a.price - b.price);
+                            if (data.length > 0) {
+                                data.sort((a, b) => a.price - b.price);
 
-								var cheapestCard = data[0];
-								var urlElements = [
-									cheapestCard.expansion_name,
-									cheapestCard.id_expansion,
-									cheapestCard.title,
-									cheapestCard.id_product,
-									cheapestCard.id_article
-								];
+                                var cheapestCard = data[0];
+                                var price = parseFloat(cheapestCard.price);
 
-								$('#result').append('<tr><td><a class="tooltip" href="https://mtgspot.pl/single/' + urlElements.join('/') + '" target="_blank">' + cheapestCard.title + '<span><img alt="" src="' + cheapestCard.image + '" /></span></a><td>' + cheapestCard.price + ' ' + currency + '<td><input type="checkbox" checked>');
-								results.push(cheapestCard);
-							} else {
-								$('#result').append('<tr><td colspan="3"><i style="color: #db9494">' + cardNameTrimmed + '</i>');
-							}
-						} else {
-							$('#result').append('<tr><td colspan="3"><i style="color: #db9494">' + cardNameTrimmed + '</i>');
-						}
+                                var urlElements = [
+                                    cheapestCard.expansion_name,
+                                    cheapestCard.id_expansion,
+                                    cheapestCard.title,
+                                    cheapestCard.id_product,
+                                    cheapestCard.id_article
+                                ];
 
-						if (results.length > 0) {
-							$('#addToBasketButton').prop('disabled', false);
-						}
-					}
-				});
-			});
-		}
+                                results.push(cheapestCard);
+                                var index = results.length - 1;
 
-		function addToBasket() {
-			$.each(results, function (index, value) {
-				$.ajax({
-					url: 'https://gateway.mtgspot.pl/api/shop/carts/single',
-					type: 'POST',
-					data: {
-						'quantity': 1,
-						'id_article': value.id_article
-					},
-					headers: {
-						'Authorization': bearer_token,
-						'x-api-key': api_key
-					},
-					success: function (response) {
-						console.log('Added to basket:', response);
-						window.open('https://mtgspot.pl/order', '_blank').focus();
-					}
-				});
-			});
-		}
+                                $('#resultBody').append(
+                                    '<tr>' +
+                                        '<td>' +
+                                            '<a class="tooltip" href="https://mtgspot.pl/single/' + urlElements.join('/') + '" target="_blank">' +
+                                                cheapestCard.title +
+                                                '<span><img alt="" src="' + cheapestCard.image + '" /></span>' +
+                                            '</a>' +
+                                        '</td>' +
+                                        '<td>' + price.toFixed(2) + ' PLN</td>' +
+                                        '<td><input type="checkbox" class="add-to-basket" data-index="' + index + '" data-price="' + price + '" checked></td>' +
+                                    '</tr>'
+                                );
+
+                                updateTotalPrice();
+                            } else {
+                                $('#resultBody').append('<tr><td colspan="3"><i style="color: #db9494">' + cardNameTrimmed + '</i></td></tr>');
+                            }
+                        } else {
+                            $('#resultBody').append('<tr><td colspan="3"><i style="color: #db9494">' + cardNameTrimmed + '</i></td></tr>');
+                        }
+
+                        if (results.length > 0) {
+                            $('#addToBasketButton').prop('disabled', false);
+                        }
+                    }
+                });
+            });
+        }
+
+        function addToBasket() {
+            $('.add-to-basket:checked').each(function() {
+                var index = $(this).data('index');
+                var value = results[index];
+
+                $.ajax({
+                    url: 'https://gateway.mtgspot.pl/api/shop/carts/single',
+                    type: 'POST',
+                    data: {
+                        'quantity': 1,
+                        'id_article': value.id_article
+                    },
+                    headers: {
+                        'Authorization': bearer_token,
+                        'x-api-key': api_key
+                    },
+                    success: function (response) {
+                        window.open('https://mtgspot.pl/order', '_blank').focus();
+                    }
+                });
+            });
+        }
+
+        function updateTotalPrice() {
+            var total = 0;
+            $('.add-to-basket:checked').each(function() {
+                var price = parseFloat($(this).data('price'));
+                total += price;
+            });
+            $('#totalPrice').text('Total: ' + total.toFixed(2) + ' PLN');
+        }
 
         $(document).ready(function() {
             $(document).on('mousemove', '.tooltip', function(e) {
@@ -134,20 +162,34 @@
                 var y = e.clientY + 20;
                 $(this).find('span').css({ top: y + 'px', left: x + 'px' });
             });
+
+            $(document).on('change', '.add-to-basket', function() {
+                updateTotalPrice();
+            });
         });
     </script>
 </head>
 
 <body>
     <div>
-        <textarea id="cards" rows="35" cols="60" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
+        <textarea id="cards" rows="30" cols="60" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
 Mana Crypt
 Sol Ring"></textarea>
         <br />
         <button onclick="sendRequests()">Sprawdź najtańsze dostępne single</button>
-        <button id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj znalezione karty do koszyka MTG Spot</button>
+        <button id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
         <hr />
-        <div id="result"></div>
+        <table id="result">
+            <tbody id="resultBody"></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="text-align: right;">
+                        <strong id="totalPrice">Total: 0.00 PLN</strong>
+                    </td>
+                    <td>&nbsp;</td>
+                </tr>
+            </tfoot>
+        </table>
     </div>
 </body>
 </html>
