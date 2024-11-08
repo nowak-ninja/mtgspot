@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <title>MTG Spot Cheapest Singles</title>
     <style>
+    	li {
+    		margin-bottom: 20px;
+    	}
+        
         table, th, td {
             border: 0px;
             border-collapse: collapse;
@@ -13,6 +17,10 @@
         tr:nth-child(even) {
             background-color: #D6EEEE;
         }
+
+		.not-found {
+			color: #db9494
+		}
 
         a {
             color: #0060B6;
@@ -47,6 +55,21 @@
 
         #addToBasketButton {
             background-color: #bbeebb;
+        }
+
+        .container {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        #instructions {
+            margin-left: 20px;
+            max-width: 500px;
+            font-size: 14px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -149,7 +172,7 @@
                         '</tr>'
                     );
                 } else {
-                    $('#resultBody').append('<tr><td colspan="3"><i style="color: #db9494">' + (result ? result.cardName : '') + '</i></td></tr>');
+                    $('#resultBody').append('<tr><td colspan="3"><i class="not-found">' + (result ? result.cardName : '') + '</i></td></tr>');
                 }
             });
 
@@ -209,12 +232,13 @@
 </head>
 
 <body>
-    <div>
+    <div class="container">
+    	<div>
         <textarea id="cards" rows="30" cols="60" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
 Mana Crypt
 Sol Ring"></textarea>
         <br />
-        <button onclick="sendRequests()">Sprawdź najtańsze dostępne single</button>
+        <button onclick="sendRequests()">Szukaj</button>
         <button id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
         <hr />
         <table id="result">
@@ -229,5 +253,20 @@ Sol Ring"></textarea>
             </tfoot>
         </table>
     </div>
+
+	<div id="instructions">
+    	<h3>Instrukcja</h3>
+    	<ol>
+    		<li>Zaloguj się w <a href="https://mtgspot.pl" target="_blank">https://mtgspot.pl</a>
+	    	<li>Wprowadź karty, jedna pod drugą i kliknij "Szukaj" - można wklejać :)
+    		<li>Poniżej zobaczysz listę <b>najtańszych</b> wersji kart w MTG Spot z ich cenami ułożone w tej samej kolejności jak w polu szukania
+    		<li>Pozycje w <i class="not-found">kolorze blado czerwonym</i> i bez ceny nie zostały znalezione
+    		<li>Każdą znalezioną kartę można zobaczyć w sklepie MTG Spot klikając w link
+    		<li>Domyślnie zaznaczone są wszystkie karty<input type="checkbox" checked onclick="return false;">
+    		<li>Możesz odznaczyć, których nie chcesz przed dodaniem do koszyka MTG Spot
+    	</ol>
+    	<span style="color: #666">Pytania i sugestie: sebastian@nowak.ninja</span>
+	</div>
+	</div>
 </body>
 </html>
