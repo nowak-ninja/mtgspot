@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <title>MTG Spot Cheapest Singles</title>
     <style>
+    	* {
+    		font-family: monospace;
+    	}
+    	
     	li {
     		margin-bottom: 20px;
     	}
@@ -52,6 +56,13 @@
         .tooltip:hover span {
             display: block;
         }
+
+		.button-container {
+			display: flex;
+			justify-content: space-between;
+			margin-top: 10px;
+			width: 100%;
+		}
 
         #addToBasketButton {
             background-color: #bbeebb;
@@ -237,9 +248,16 @@
         <textarea id="cards" rows="30" cols="60" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
 Mana Crypt
 Sol Ring"></textarea>
-        <br />
-        <button onclick="sendRequests()">Szukaj</button>
-        <button id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
+
+        <div class="button-container">
+			<div class="left-button">
+				<button onclick="sendRequests()">Szukaj</button>
+			</div>
+			<div class="right-button">
+				<button id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
+			</div>
+		</div>
+
         <hr />
         <table id="result">
             <tbody id="resultBody"></tbody>
@@ -257,7 +275,7 @@ Sol Ring"></textarea>
 	<div id="instructions">
     	<h3>Instrukcja</h3>
     	<ol>
-    		<li>Zaloguj się w <a href="https://mtgspot.pl" target="_blank">https://mtgspot.pl</a>
+    		<li>Zaloguj się na <a href="https://mtgspot.pl" target="_blank">https://mtgspot.pl</a>
 	    	<li>Wprowadź karty, jedna pod drugą i kliknij "Szukaj" - można wklejać :)
     		<li>Poniżej zobaczysz listę <b>najtańszych</b> wersji kart w MTG Spot z ich cenami ułożone w tej samej kolejności jak w polu szukania
     		<li>Pozycje w <i class="not-found">kolorze blado czerwonym</i> i bez ceny nie zostały znalezione
@@ -265,7 +283,7 @@ Sol Ring"></textarea>
     		<li>Domyślnie zaznaczone są wszystkie karty<input type="checkbox" checked onclick="return false;">
     		<li>Możesz odznaczyć, których nie chcesz przed dodaniem do koszyka MTG Spot
     	</ol>
-    	<span style="color: #666">Pytania i sugestie: sebastian@nowak.ninja</span>
+    	<span style="color: #666; font-size: 12px;">Pytania i sugestie: sebastian@nowak.ninja</span>
 	</div>
 	</div>
 </body>
