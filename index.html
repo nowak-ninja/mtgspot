@@ -5,13 +5,45 @@
     <title>MTG Spot Cheapest Singles</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <style>
-    	* {
-    		font-family: monospace;
-    	}
-    	
-    	li {
-    		margin-bottom: 20px;
-    	}
+        * {
+            font-family: monospace;
+        }
+
+        .loading-overlay {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            font-size: 20px;
+            color: #333;
+            z-index: 1000;
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+		@keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        li {
+            margin-bottom: 20px;
+        }
         
         table, th, td {
             border: 0px;
@@ -23,9 +55,9 @@
             background-color: #D6EEEE;
         }
 
-		.not-found {
-			color: #db9494
-		}
+        .not-found {
+            color: #db9494
+        }
 
         a {
             color: #0060B6;
@@ -36,6 +68,35 @@
             color: #f44336;
             text-decoration: none;
             cursor: pointer;
+        }
+
+		.foil-text {
+			font-weight: bold;
+			color: #fff;
+			background: linear-gradient(45deg, #ffd700, #ff4d00, #00a2ff, #ff00ff);
+			background-size: 400%;
+			-webkit-background-clip: text;
+			background-clip: text;
+			color: transparent;
+			animation: foilEffect 6s linear infinite;
+		}
+  
+        @keyframes foilEffect {
+			0% {
+			  background-position: 0% 50%;
+			}
+			25% {
+			  background-position: 50% 50%;
+			}
+			50% {
+			  background-position: 100% 50%;
+			}
+			75% {
+			  background-position: 50% 50%;
+			}
+			100% {
+			  background-position: 0% 50%;
+			}
         }
 
         img {
@@ -58,12 +119,12 @@
             display: block;
         }
 
-		.button-container {
-			display: flex;
-			justify-content: space-between;
-			margin-top: 10px;
-			width: 100%;
-		}
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            width: 100%;
+        }
 
         #addToBasketButton {
             background-color: #bbeebb;
@@ -84,8 +145,8 @@
             border-radius: 4px;
         }
     </style>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
         const bearer_token = 'Bearer f7199f36032451871135ef0c64b79fe055842aca';
         const api_key = 'b3d39321-5dc4-4298-98c6-0399432a948b';
@@ -94,6 +155,8 @@
 
         function sendRequests() {
             $('#resultBody').html('');
+            $('#result').hide();
+
             $('#addToBasketButton').prop('disabled', true);
             $('#totalPrice').text('Suma: 0.00 PLN');
 
@@ -161,6 +224,7 @@
 
         function renderResults() {
             $('#resultBody').html('');
+            $('#result').show();
             updateTotalPrice();
 
             var hasSuccess = false;
@@ -179,12 +243,17 @@
                                     '<span><img alt="" src="' + cheapestCard.image + '" /></span>' +
                                 '</a>' +
                             '</td>' +
-                            '<td>' + price.toFixed(2) + ' PLN</td>' +
+                            '<td>' + cheapestCard.language.slice(0, 3) + '</td>' +
+                            '<td><i class="foil-text">' + (cheapestCard.is_foil ? 'foil' : '') + '</i></td>' +
+                            '<td><i style="color: red">' + (cheapestCard.is_signed ? 'signed' : '') + '</i></td>' +
+                            '<td><i style="color: green">' + (cheapestCard.is_altered ? 'alt' : '') + '</i></td>' +
+                            '<td>' + cheapestCard.expansion_name + '</td>' +
+                            '<td><b>' + price.toFixed(2) + ' PLN</b></td>' +
                             '<td><input type="checkbox" class="add-to-basket" data-index="' + index + '" data-price="' + price + '" checked></td>' +
                         '</tr>'
                     );
                 } else {
-                    $('#resultBody').append('<tr><td colspan="3"><i class="not-found">' + (result ? result.cardName : '') + '</i></td></tr>');
+                    $('#resultBody').append('<tr><td colspan="8"><i class="not-found">' + (result ? result.cardName : '') + '</i></td></tr>');
                 }
             });
 
@@ -239,32 +308,55 @@
             $(document).on('change', '.add-to-basket', function() {
                 updateTotalPrice();
             });
+
+			$(document).ajaxStart(function() {
+				$('#loadingOverlay').show();
+			});
+	
+			$(document).ajaxStop(function() {
+				$('#loadingOverlay').hide();
+			});
         });
     </script>
 </head>
 
 <body>
     <div class="container">
-    	<div>
-        <textarea id="cards" rows="30" cols="60" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
+        <div>
+        <textarea id="cards" rows="30" cols="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
 Mana Crypt
 Sol Ring"></textarea>
 
         <div class="button-container">
-			<div class="left-button">
-				<button onclick="sendRequests()">Szukaj</button>
-			</div>
-			<div class="right-button">
-				<button id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
-			</div>
-		</div>
+            <div class="left-button">
+                <button onclick="sendRequests()">Szukaj</button>
+            </div>
+            <div class="right-button">
+                <button id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
+            </div>
+        </div>
 
         <hr />
-        <table id="result">
+		<div id="loadingOverlay" class="loading-overlay">
+        	<div class="spinner"></div>
+    	    <div>Szukam kart...</div>
+	    </div>
+
+
+        <table id="result" style="display: none">
+			<thead>
+				<tr>
+					<th>Nazwa</th>
+					<th>Język</th>
+					<th colspan="3"></th>
+					<th>Dodatek</th>
+					<th colspan="2">Cena</th>
+				</tr>
+			</thead>
             <tbody id="resultBody"></tbody>
             <tfoot>
                 <tr>
-                    <td colspan="2" style="text-align: right;">
+                    <td colspan="7" style="text-align: right;">
                         <strong id="totalPrice">Suma: 0.00 PLN</strong>
                     </td>
                     <td>&nbsp;</td>
@@ -273,19 +365,19 @@ Sol Ring"></textarea>
         </table>
     </div>
 
-	<div id="instructions">
-    	<h3>Instrukcja</h3>
-    	<ol>
-    		<li>Zaloguj się na <a href="https://mtgspot.pl" target="_blank">https://mtgspot.pl</a> i wróć tutaj
-	    	<li>Wprowadź karty w polu po lewej, jedna pod drugą i kliknij "Szukaj" - można wklejać :)
-    		<li>Poniżej zobaczysz listę <b>najtańszych</b> wersji kart w MTG Spot z ich cenami ułożone w tej samej kolejności jak w polu szukania
-    		<li>Pozycje w <i class="not-found">kolorze blado czerwonym</i> i bez ceny nie zostały znalezione
-    		<li>Szczegóły znalezionej karty można zobaczyć w sklepie MTG Spot klikając w jej nazwę
-    		<li>Domyślnie zaznaczone są wszystkie karty<input type="checkbox" checked onclick="return false;">
-    		<li>Możesz odznaczyć karty, których nie chcesz przed dodaniem ich do koszyka MTG Spot
-    	</ol>
-    	<span style="color: #666; font-size: 12px;">Pytania i sugestie: sebastian@nowak.ninja</span>
-	</div>
-	</div>
+    <div id="instructions">
+        <h3>Instrukcja</h3>
+        <ol>
+            <li>Zaloguj się na <a href="https://mtgspot.pl" target="_blank">https://mtgspot.pl</a> i wróć tutaj
+            <li>Wprowadź karty w polu po lewej, jedna pod drugą i kliknij "Szukaj" - można wklejać :)
+            <li>Poniżej zobaczysz listę <b>najtańszych</b> wersji kart w MTG Spot z ich cenami ułożone w tej samej kolejności jak w polu szukania
+            <li>Pozycje w <i class="not-found">kolorze blado czerwonym</i> i bez ceny nie zostały znalezione
+            <li>Szczegóły znalezionej karty można zobaczyć w sklepie MTG Spot klikając w jej nazwę
+            <li>Domyślnie zaznaczone są wszystkie karty<input type="checkbox" checked onclick="return false;">
+            <li>Możesz odznaczyć karty, których nie chcesz przed dodaniem ich do koszyka MTG Spot
+        </ol>
+        <span style="color: #666; font-size: 12px;">Pytania i sugestie: sebastian@nowak.ninja</span>
+    </div>
+    </div>
 </body>
 </html>
