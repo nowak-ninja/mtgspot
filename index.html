@@ -176,7 +176,7 @@
                     success: function (response) {
                         if (response.count > 0) {
                             var data = response.data.filter(function(item) {
-                                return item.stock !== 0;
+                                return item.stock !== 0 && item.rarity !== "Tip Card" && item.rarity !== "Token";
                             });
 
                             if (data.length > 0) {
