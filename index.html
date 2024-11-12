@@ -258,12 +258,7 @@
             });
 
             updateTotalPrice();
-
-            if (hasSuccess) {
-                $('#addToBasketButton').prop('disabled', false);
-            } else {
-                $('#addToBasketButton').prop('disabled', true);
-            }
+			$('#addToBasketButton').prop('disabled', !hasSuccess);
         }
 
         function addToBasket() {
@@ -339,7 +334,7 @@ Sol Ring"></textarea>
         <hr />
 		<div id="loadingOverlay" class="loading-overlay">
         	<div class="spinner"></div>
-    	    <div>Szukam kart...</div>
+    	    <div id="ajax-message">Ładuję...</div>
 	    </div>
 
 
