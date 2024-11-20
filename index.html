@@ -80,27 +80,27 @@
 			color: transparent;
 			animation: foilEffect 6s linear infinite;
 		}
-  
+
         @keyframes foilEffect {
 			0% {
-			  background-position: 0% 50%;
+			    background-position: 0% 50%;
 			}
 			25% {
-			  background-position: 50% 50%;
+			    background-position: 50% 50%;
 			}
 			50% {
-			  background-position: 100% 50%;
+			    background-position: 100% 50%;
 			}
 			75% {
-			  background-position: 50% 50%;
+			    background-position: 50% 50%;
 			}
 			100% {
-			  background-position: 0% 50%;
+			    background-position: 0% 50%;
 			}
         }
 
         img {
-           border-radius: 8px;
+            border-radius: 8px;
         }
 
         .tooltip {
@@ -147,10 +147,34 @@
     </style>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
     <script>
         const bearer_token = 'Bearer f7199f36032451871135ef0c64b79fe055842aca';
         const api_key = 'b3d39321-5dc4-4298-98c6-0399432a948b';
 
+        // var currentTime = new Date().toISOString();
+        // var user_id = CryptoJS.SHA1(currentTime).toString();
+        // console.log('user_id:', user_id);
+
+        // $.ajax({
+        //     url: 'https://mtgspot.cn-panel.pl/cart?lang=pl&user_id=' + user_id,
+        //     type: 'GET',
+        //     success: function (response) {
+        //         console.log(response);
+        //     }
+        // });
+
+        function p() {
+            return "xxxxxxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxxxxxx".replace(/[xy]/g, function(m) {
+                const g = Math.random() * 16 | 0;
+                return (m === "x" ? g : g & 3 | 8).toString(16)
+            })
+        }
+
+        user_id = p();
+        console.log(user_id);
+
+        // ----------------------------------------------------------------------------------------------------------
         var results = [];
 
         function sendRequests() {
@@ -258,7 +282,7 @@
             });
 
             updateTotalPrice();
-			$('#addToBasketButton').prop('disabled', !hasSuccess);
+			// $('#addToBasketButton').prop('disabled', !hasSuccess);
         }
 
         function addToBasket() {
@@ -274,7 +298,8 @@
                         'id_article': value.id_article
                     },
                     headers: {
-                        'Authorization': bearer_token,
+                        // 'Authorization': bearer_token,
+                        'x-user-id': user_id,
                         'x-api-key': api_key
                     },
                     success: function (response) {
@@ -333,7 +358,7 @@ Sol Ring"></textarea>
 
         <hr />
 		<div id="loadingOverlay" class="loading-overlay">
-        	<div class="spinner"></div>
+            <div class="spinner"></div>
     	    <div id="ajax-message">Ładuję...</div>
 	    </div>
 
@@ -370,6 +395,7 @@ Sol Ring"></textarea>
             <li>Szczegóły znalezionej karty można zobaczyć w sklepie MTG Spot klikając w jej nazwę
             <li>Domyślnie zaznaczone są wszystkie karty<input type="checkbox" checked onclick="return false;">
             <li>Możesz odznaczyć karty, których nie chcesz przed dodaniem ich do koszyka MTG Spot
+            <li style="color: red">Dodawanie do koszyka chwilowo niedostępne!</li>
         </ol>
         <span style="color: #666; font-size: 12px;">Pytania i sugestie: sebastian@nowak.ninja</span>
     </div>
