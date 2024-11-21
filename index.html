@@ -327,11 +327,13 @@
             }
 
             function addToBasket() {
+                const requests = [];
+
                 $('.add-to-basket:checked').each(function() {
                     var index = $(this).data('index');
                     var value = results[index].data;
 
-                    $.ajax({
+                    const ajaxReqest = $.ajax({
                         url: 'https://gateway.mtgspot.pl/api/shop/carts/single',
                         type: 'POST',
                         data: {
@@ -344,12 +346,18 @@
                         },
                         success: function (response) {
                             console.log('Item added to cart:', value.title, response);
-                            window.open('https://mtgspot.pl/order', '_blank').focus();
                         },
                         error: function () {
                             alert('Wystąpił błąd podczas dodawania: ' + value.title + ' do koszyka. Możliwe, że karta nie jest już dostępna.');
                         }
                     });
+
+                    requests.push(ajaxReqest);
+                });
+
+                Promise.allSettled(requests).then(function() {
+                    console.log('All requests completed');
+                    window.open('https://mtgspot.pl/order', '_blank').focus();
                 });
             }
 
