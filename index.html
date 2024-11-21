@@ -55,7 +55,7 @@
                 border-collapse: collapse;
                 padding: 5px;
             }
-            
+
             tr:nth-child(even) {
                 background-color: #D6EEEE;
             }
@@ -218,7 +218,7 @@
                 $('#selectAll').prop('checked', true);
 
                 $('#addToBasketButton').prop('disabled', true);
-                $('#totalPrice').text('0.00 PLN');
+                $('#totalPrice').text('0.00');
 
                 var lines = $('#cards').val().trim().split('\n');
                 var numRequests = lines.length;
@@ -314,8 +314,8 @@
                                 '<td><i style="color: red">' + (cheapestCard.is_signed ? 'signed' : '') + '</i></td>' +
                                 '<td><i style="color: green">' + (cheapestCard.is_altered ? 'alt' : '') + '</i></td>' +
                                 '<td>' + cheapestCard.expansion_name + '</td>' +
-                                '<td><b>' + price.toFixed(2) + '</b></td>' +
-                                '<td><input type="checkbox" class="add-to-basket" data-index="' + index + '" data-price="' + price + '" checked></td>' +
+                                '<td style="text-align: right;"><b>' + price.toFixed(2) + '</b></td>' +
+                                '<td style="text-align: right;"><input type="checkbox" class="add-to-basket" data-index="' + index + '" data-price="' + price + '" checked></td>' +
                             '</tr>'
                         );
                     } else {
@@ -374,7 +374,7 @@
                     total += price;
                 });
 
-                $('#totalPrice').text(total.toFixed(2) + ' PLN');
+                $('#totalPrice').text(total.toFixed(2));
             }
 
             function updateLoginState() {
@@ -552,7 +552,7 @@ Sol Ring"></textarea>
                             <th colspan="3"></th>
                             <th>Dodatek</th>
                             <th>Cena PLN</th>
-                            <th><input type="checkbox" id="selectAll" checked></th>
+                            <th style="text-align: right;"><input type="checkbox" id="selectAll" checked></th>
                         </tr>
                     </thead>
                     <tbody id="resultBody"></tbody>
@@ -561,8 +561,8 @@ Sol Ring"></textarea>
                             <td colspan="6" style="text-align: right;">
                                 <strong style="color: #4b48ff;">Suma:</strong>
                             </td>
-                            <td>
-                                <strong id="totalPrice" style="color: #4b48ff;">0.00 PLN</strong>
+                            <td style="text-align: right;">
+                                <strong id="totalPrice" style="color: #4b48ff;">0.00</strong>
                             </td>
                             <td>&nbsp;</td>
                         </tr>
