@@ -135,6 +135,23 @@
                 align-items: flex-start;
             }
 
+            #login-container {
+                display: flex;
+                flex-direction: row;
+                gap: 10px;
+                margin-bottom: 10px;
+                align-items: center;
+            }
+
+            #login-container input[type="text"],
+            #login-container input[type="password"],
+            #login-container input[type="button"] {
+                font-size: 14px;
+                padding: 5px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+
             #instructions {
                 margin-left: 20px;
                 max-width: 500px;
@@ -371,11 +388,12 @@
 
     <body>
         <div class="container">
-            <div>
+            <div id="login-container">
                 <input type="text" id="username" placeholder="Login" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                 <input type="password" id="password" placeholder="Hasło" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                 <input type="button" id="loginButton" value="Zaloguj">
             </div>
+
             <div id="search-box">
                 <textarea id="cards" rows="30" cols="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
 Mana Crypt
