@@ -326,9 +326,6 @@
                     var index = $(this).data('index');
                     var value = results[index].data;
 
-                    var objToken = localStorage.getItem('objToken');
-                    var access_token = JSON.parse(objToken).access_token
-
                     $.ajax({
                         url: 'https://gateway.mtgspot.pl/api/shop/carts/single',
                         type: 'POST',
@@ -337,7 +334,7 @@
                             'id_article': value.id_article
                         },
                         headers: {
-                            'Authorization': 'Bearer ' + access_token,
+                            'Authorization': 'Bearer ' + getCredentialsItem('access_token'),
                             'x-api-key': api_key
                         },
                         success: function (response) {
@@ -363,13 +360,18 @@
             }
 
             function updateLoginState() {
-                if (localStorage.getItem('access_token')) {
+                if (localStorage.getItem('objToken')) {
                     $('#login-container').hide();
                     $('#logout-container').show();
+                    $('#logged-username').text(getCredentialsItem('login'));
                 } else {
                     $('#login-container').show();
                     $('#logout-container').hide();
                 }
+            }
+
+            function getCredentialsItem(item) {
+                return JSON.parse(localStorage.getItem('objToken'))[item];
             }
 
             $(document).ready(function() {
@@ -421,7 +423,7 @@
                 $(document).ajaxStart(function() {
                     $('#loadingOverlay').show();
                 });
-        
+
                 $(document).ajaxStop(function() {
                     $('#loadingOverlay').hide();
                 });
@@ -439,6 +441,7 @@
                 </div>
 
                 <div id="logout-container">
+                    <span id="logged-username"></span>
                     <input type="button" id="logoutButton" value="Wyloguj">
                 </div>
     
