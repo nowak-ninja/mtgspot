@@ -290,6 +290,7 @@
             function renderResults() {
                 $('#resultBody').html('');
                 $('#result').show();
+                updateLoginState();
                 updateTotalPrice();
 
                 var hasSuccess = false;
@@ -322,16 +323,23 @@
                     }
                 });
 
+                updateLoginState();
                 updateTotalPrice();
-                $('#addToBasketButton').prop('disabled', !hasSuccess);
             }
 
             function addToBasket() {
+                if ($('.add-to-basket:checked').length === 0) {
+                    alert('Nie zaznaczono żadnych produktów!');
+                    return false;
+                }
+
+                const requests = [];
+
                 $('.add-to-basket:checked').each(function() {
                     var index = $(this).data('index');
                     var value = results[index].data;
 
-                    $.ajax({
+                    const ajaxReqest = $.ajax({
                         url: 'https://gateway.mtgspot.pl/api/shop/carts/single',
                         type: 'POST',
                         data: {
@@ -344,12 +352,18 @@
                         },
                         success: function (response) {
                             console.log('Item added to cart:', value.title, response);
-                            window.open('https://mtgspot.pl/order', '_blank').focus();
                         },
                         error: function () {
                             alert('Wystąpił błąd podczas dodawania: ' + value.title + ' do koszyka. Możliwe, że karta nie jest już dostępna.');
                         }
                     });
+
+                    requests.push(ajaxReqest);
+                });
+
+                Promise.allSettled(requests).then(function() {
+                    console.log('All requests completed');
+                    window.open('https://mtgspot.pl/order', '_blank').focus();
                 });
             }
 
@@ -369,9 +383,11 @@
                     $('#login-container').hide();
                     $('#logout-container').show();
                     $('#logged-username').text(getCredentialsItem('login'));
+                    $('#addToBasketButton').prop('disabled', false);
                 } else {
                     $('#login-container').show();
                     $('#logout-container').hide();
+                    $('#addToBasketButton').prop('disabled', true);
                 }
             }
 
