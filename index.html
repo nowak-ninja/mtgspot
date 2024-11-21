@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
     <head>
         <meta charset="utf-8">
         <title>MTG Spot Cheapest Singles</title>
@@ -45,6 +45,11 @@
                 margin-bottom: 20px;
             }
             
+            ul > li {
+                margin-top: 5px;
+                margin-bottom: 10px;
+            }
+
             table, th, td {
                 border: 0px;
                 border-collapse: collapse;
@@ -164,33 +169,9 @@
         </style>
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
         <script>
             const api_key = 'b3d39321-5dc4-4298-98c6-0399432a948b';
 
-            // var currentTime = new Date().toISOString();
-            // var user_id = CryptoJS.SHA1(currentTime).toString();
-            // console.log('user_id:', user_id);
-
-            // $.ajax({
-            //     url: 'https://mtgspot.cn-panel.pl/cart?lang=pl&user_id=' + user_id,
-            //     type: 'GET',
-            //     success: function (response) {
-            //         console.log(response);
-            //     }
-            // });
-
-            function p() {
-                return "xxxxxxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxxxxxx".replace(/[xy]/g, function(m) {
-                    const g = Math.random() * 16 | 0;
-                    return (m === "x" ? g : g & 3 | 8).toString(16)
-                })
-            }
-
-            var user_id = p();
-            console.log(user_id);
-
-            // ----------------------------------------------------------------------------------------------------------
             var results = [];
 
             function sendRequests() {
@@ -314,7 +295,7 @@
                             'id_article': value.id_article
                         },
                         headers: {
-                            'Authorization': 'Bearer ' + access_token,
+                            'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
                             'x-api-key': api_key
                         },
                         success: function (response) {
@@ -338,7 +319,19 @@
                 $('#totalPrice').text('Suma: ' + total.toFixed(2) + ' PLN');
             }
 
+            function updateLoginState() {
+                if (localStorage.getItem('access_token')) {
+                    $('#login-container').hide();
+                    $('#logoutButton').show();
+                } else {
+                    $('#login-container').show();
+                    $('#logoutButton').hide();
+                }
+            }
+
             $(document).ready(function() {
+                updateLoginState();
+
                 $(document).on('mousemove', '.tooltip', function(e) {
                     var x = e.clientX + 20;
                     var y = e.clientY + 20;
@@ -368,11 +361,18 @@
                         success: function (response) {
                             localStorage.setItem('access_token', response.access_token);
                             console.log('Token saved!');
+                            updateLoginState();
                         },
                         error: function () {
                             alert('Wystąpił błąd podczas logowania.');
                         }
                     });
+                });
+
+                $(document).on('click', '#logoutButton', function() {
+                    localStorage.removeItem('access_token');
+                    console.log('Token removed!');
+                    updateLoginState();
                 });
 
                 $(document).ajaxStart(function() {
@@ -388,13 +388,15 @@
 
     <body>
         <div class="container">
-            <div id="login-container">
-                <input type="text" id="username" placeholder="Login" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                <input type="password" id="password" placeholder="Hasło" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                <input type="button" id="loginButton" value="Zaloguj">
-            </div>
-
             <div id="search-box">
+                <div id="login-container">
+                    <input type="text" id="username" placeholder="adres@email.pl" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                    <input type="password" id="password" placeholder="hasło" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                    <input type="button" id="loginButton" value="Zaloguj w MTG Spot">
+                </div>
+
+                <input type="button" id="logoutButton" value="Wyloguj" style="display: none;">
+    
                 <textarea id="cards" rows="30" cols="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
 Mana Crypt
 Sol Ring"></textarea>
@@ -438,16 +440,21 @@ Sol Ring"></textarea>
 
             <div id="instructions">
                 <h3>Instrukcja</h3>
+
                 <ol>
-                    <li>Zaloguj się na <a href="https://mtgspot.pl" target="_blank">https://mtgspot.pl</a> i wróć tutaj
+                    <li>Logowanie
+                        <ul>
+                            <li>Jeżeli chcesz dodać znalezione karty do koszyka w MTG Spot, musisz zalogować się na tej stronie
+                            <li>Strona działa w Twojej przeglądarce i tylko w niej dane logowania będą zapisane!
+                            <li>Aby zobaczyć karty w koszyku na MTG Spot, musisz również się tam zalogować (<a href="https://mtgspot.pl" target="_blank">https://mtgspot.pl</a>)
+                        </ul>
                     <li>Wprowadź karty w polu po lewej, jedna pod drugą i kliknij "Szukaj" - można wklejać :)
                     <li>Poniżej zobaczysz listę <b>najtańszych</b> wersji kart w MTG Spot z ich cenami ułożone w tej samej kolejności jak w polu szukania
-                    <li>Pozycje w <i class="not-found">kolorze blado czerwonym</i> i bez ceny nie zostały znalezione
+                    <li>Pozycje w <i class="not-found">kolorze blado czerwonym</i> nie zostały znalezione
                     <li>Szczegóły znalezionej karty można zobaczyć w sklepie MTG Spot klikając w jej nazwę
-                    <li>Domyślnie zaznaczone są wszystkie karty<input type="checkbox" checked onclick="return false;">
-                    <li>Możesz odznaczyć karty, których nie chcesz przed dodaniem ich do koszyka MTG Spot
-                    <li style="color: red">Dodawanie do koszyka chwilowo niedostępne!</li>
+                    <li>Tylko zaznaczone <input type="checkbox" checked onclick="return false;"> karty zostaną dodane do koszyka MTG Spot
                 </ol>
+
                 <span style="color: #666; font-size: 12px;">Pytania i sugestie: sebastian@nowak.ninja</span>
             </div>
         </div>
