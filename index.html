@@ -131,7 +131,22 @@
                 width: 100%;
             }
 
+            #searchButton {
+                font-size: 14px;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
             #addToBasketButton {
+                font-size: 14px;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                width: 100%;
+                box-sizing: border-box;
                 background-color: #bbeebb;
             }
 
@@ -152,9 +167,33 @@
             #login-container input[type="password"],
             #login-container input[type="button"] {
                 font-size: 14px;
-                padding: 5px;
+                padding: 10px;
                 border: 1px solid #ddd;
                 border-radius: 4px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            #login-container input[type="button"] {
+                width: 30%;
+            }
+
+            #logout-container {
+                display: flex;
+                flex-direction: row;
+                gap: 10px;
+                margin-bottom: 10px;
+                align-items: center;
+                justify-content: right;
+            }
+
+            #logout-container input[type="button"] {
+                font-size: 14px;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                width: 30%;
+                box-sizing: border-box;
             }
 
             #instructions {
@@ -295,14 +334,15 @@
                             'id_article': value.id_article
                         },
                         headers: {
-                            'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
+                            'Authorization': 'Bearer ' + getCredentialsItem('access_token'),
                             'x-api-key': api_key
                         },
                         success: function (response) {
+                            console.log('Item added to cart:', response);
                             window.open('https://mtgspot.pl/order', '_blank').focus();
                         },
                         error: function () {
-                            alert('Wystąpił błąd podczas dodawania produktu do koszyka.');
+                            alert('Wystąpił błąd podczas dodawania: ' + value.title + ' do koszyka. Możliwe, że karta nie jest już dostępna.');
                         }
                     });
                 });
@@ -320,13 +360,18 @@
             }
 
             function updateLoginState() {
-                if (localStorage.getItem('access_token')) {
+                if (localStorage.getItem('objToken')) {
                     $('#login-container').hide();
-                    $('#logoutButton').show();
+                    $('#logout-container').show();
+                    $('#logged-username').text(getCredentialsItem('login'));
                 } else {
                     $('#login-container').show();
-                    $('#logoutButton').hide();
+                    $('#logout-container').hide();
                 }
+            }
+
+            function getCredentialsItem(item) {
+                return JSON.parse(localStorage.getItem('objToken'))[item];
             }
 
             $(document).ready(function() {
@@ -359,26 +404,26 @@
                             'x-api-key': api_key
                         },
                         success: function (response) {
-                            localStorage.setItem('access_token', response.access_token);
-                            console.log('Token saved!');
+                            localStorage.setItem('objToken', JSON.stringify(response));
+                            console.log('Credentials saved!');
                             updateLoginState();
                         },
                         error: function () {
-                            alert('Wystąpił błąd podczas logowania.');
+                            alert('Wystąpił błąd podczas logowania. Spróbuj ponownie.');
                         }
                     });
                 });
 
                 $(document).on('click', '#logoutButton', function() {
-                    localStorage.removeItem('access_token');
-                    console.log('Token removed!');
+                    localStorage.removeItem('objToken');
+                    console.log('Credentials removed!');
                     updateLoginState();
                 });
 
                 $(document).ajaxStart(function() {
                     $('#loadingOverlay').show();
                 });
-        
+
                 $(document).ajaxStop(function() {
                     $('#loadingOverlay').hide();
                 });
@@ -395,7 +440,10 @@
                     <input type="button" id="loginButton" value="Zaloguj w MTG Spot">
                 </div>
 
-                <input type="button" id="logoutButton" value="Wyloguj" style="display: none;">
+                <div id="logout-container">
+                    <span id="logged-username"></span>
+                    <input type="button" id="logoutButton" value="Wyloguj">
+                </div>
     
                 <textarea id="cards" rows="30" cols="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
 Mana Crypt
@@ -403,10 +451,10 @@ Sol Ring"></textarea>
 
                 <div class="button-container">
                     <div class="left-button">
-                        <button onclick="sendRequests()">Szukaj</button>
+                        <button type="button" id="searchButton" onclick="sendRequests()">Szukaj</button>
                     </div>
                     <div class="right-button">
-                        <button id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
+                        <button type="button" id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
                     </div>
                 </div>
 
