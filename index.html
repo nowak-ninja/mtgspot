@@ -131,7 +131,22 @@
                 width: 100%;
             }
 
+            #searchButton {
+                font-size: 14px;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
             #addToBasketButton {
+                font-size: 14px;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                width: 100%;
+                box-sizing: border-box;
                 background-color: #bbeebb;
             }
 
@@ -152,9 +167,33 @@
             #login-container input[type="password"],
             #login-container input[type="button"] {
                 font-size: 14px;
-                padding: 5px;
+                padding: 10px;
                 border: 1px solid #ddd;
                 border-radius: 4px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            #login-container input[type="button"] {
+                width: 30%;
+            }
+
+            #logout-container {
+                display: flex;
+                flex-direction: row;
+                gap: 10px;
+                margin-bottom: 10px;
+                align-items: center;
+                justify-content: right;
+            }
+
+            #logout-container input[type="button"] {
+                font-size: 14px;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                width: 30%;
+                box-sizing: border-box;
             }
 
             #instructions {
@@ -322,10 +361,10 @@
             function updateLoginState() {
                 if (localStorage.getItem('access_token')) {
                     $('#login-container').hide();
-                    $('#logoutButton').show();
+                    $('#logout-container').show();
                 } else {
                     $('#login-container').show();
-                    $('#logoutButton').hide();
+                    $('#logout-container').hide();
                 }
             }
 
@@ -395,7 +434,9 @@
                     <input type="button" id="loginButton" value="Zaloguj w MTG Spot">
                 </div>
 
-                <input type="button" id="logoutButton" value="Wyloguj" style="display: none;">
+                <div id="logout-container">
+                    <input type="button" id="logoutButton" value="Wyloguj">
+                </div>
     
                 <textarea id="cards" rows="30" cols="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
 Mana Crypt
@@ -403,10 +444,10 @@ Sol Ring"></textarea>
 
                 <div class="button-container">
                     <div class="left-button">
-                        <button onclick="sendRequests()">Szukaj</button>
+                        <button type="button" id="searchButton" onclick="sendRequests()">Szukaj</button>
                     </div>
                     <div class="right-button">
-                        <button id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
+                        <button type="button" id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
                     </div>
                 </div>
 
