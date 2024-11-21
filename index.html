@@ -149,7 +149,6 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
         <script>
-            const bearer_token = 'Bearer f7199f36032451871135ef0c64b79fe055842aca';
             const api_key = 'b3d39321-5dc4-4298-98c6-0399432a948b';
 
             // var currentTime = new Date().toISOString();
@@ -171,7 +170,7 @@
                 })
             }
 
-            user_id = p();
+            var user_id = p();
             console.log(user_id);
 
             // ----------------------------------------------------------------------------------------------------------
@@ -188,7 +187,7 @@
                 var numRequests = lines.length;
                 var completedRequests = 0;
 
-                results = new Array(numRequests); // Initialize results array
+                results = new Array(numRequests);
 
                 $.each(lines, function (index, value) {
                     var cardNameTrimmed = value.trim().replace(/^\d+\s*/, '');
@@ -298,11 +297,14 @@
                             'id_article': value.id_article
                         },
                         headers: {
-                            // 'Authorization': bearer_token,
+                            'Authorization': 'Bearer ' + access_token,
                             'x-api-key': api_key
                         },
                         success: function (response) {
                             window.open('https://mtgspot.pl/order', '_blank').focus();
+                        },
+                        error: function () {
+                            alert('Wystąpił błąd podczas dodawania produktu do koszyka.');
                         }
                     });
                 });
@@ -347,11 +349,11 @@
                             'x-api-key': api_key
                         },
                         success: function (response) {
-                            access_token = response.access_token;
-                            token_type = response.token_type;
-                            refresh_token = response.refresh_token;
-
-                            console.log(access_token, token_type, refresh_token);
+                            localStorage.setItem('access_token', response.access_token);
+                            console.log('Token saved!');
+                        },
+                        error: function () {
+                            alert('Wystąpił błąd podczas logowania.');
                         }
                     });
                 });
