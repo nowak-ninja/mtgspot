@@ -397,7 +397,7 @@
             }
 
             function setCredentials(tokenObj) {
-                // const expirationTime = Date.now() + 6 * 24 * 60 * 60 * 1000; // 6 days
+                const expirationTime = Date.now() + 6 * 24 * 60 * 60 * 1000; // 6 days
                 const tokenData = {
                     ...tokenObj,
                     expiration: expirationTime
