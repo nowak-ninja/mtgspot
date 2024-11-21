@@ -213,7 +213,7 @@
 
             var results = [];
 
-            function sendRequests() {
+            function searchSingles() {
                 $('#resultBody').html('');
                 $('#result').hide();
 
@@ -228,8 +228,13 @@
 
                 $.each(lines, function (index, value) {
                     var cardNameTrimmed = value.trim().replace(/^\d+\s*/, '');
-                    console.log('Looking for:', cardNameTrimmed);
 
+                    if (cardNameTrimmed === '') {
+                        numRequests--;
+                        return true;
+                    }
+
+                    console.log('Looking for:', cardNameTrimmed);
                     $.ajax({
                         url: 'https://mtgspot.cn-panel.pl/products?s_title=' + encodeURIComponent(cardNameTrimmed) + '&limit=300&offset=0&order_by=title&sort_by=asc',
                         type: 'GET',
@@ -338,7 +343,7 @@
                             'x-api-key': api_key
                         },
                         success: function (response) {
-                            console.log('Item added to cart:', response);
+                            console.log('Item added to cart:', value.title, response);
                             window.open('https://mtgspot.pl/order', '_blank').focus();
                         },
                         error: function () {
@@ -377,10 +382,31 @@
             $(document).ready(function() {
                 updateLoginState();
 
-                $(document).on('mousemove', '.tooltip', function(e) {
-                    var x = e.clientX + 20;
-                    var y = e.clientY + 20;
-                    $(this).find('span').css({ top: y + 'px', left: x + 'px' });
+                $(document).on('mousemove', '.tooltip', function (e) {
+                    const tooltip = $(this).find('span');
+                    const cursorX = e.clientX;
+                    const cursorY = e.clientY;
+                    const tooltipWidth = tooltip.outerWidth();
+                    const tooltipHeight = tooltip.outerHeight();
+                    const viewportWidth = $(window).width();
+                    const viewportHeight = $(window).height();
+
+                    // default positioning (below the cursor)
+                    let top = cursorY + 20;
+                    let left = cursorX + 20;
+
+                    // adjust if the tooltip goes out of the viewport on the right
+                    if (cursorX + tooltipWidth + 20 > viewportWidth) {
+                        left = cursorX - tooltipWidth - 20;
+                    }
+
+                    // adjust if the tooltip goes out of the viewport on the bottom
+                    if (cursorY + tooltipHeight + 20 > viewportHeight) {
+                        top = cursorY - tooltipHeight - 20;
+                    }
+
+                    // apply the calculated position
+                    tooltip.css({ top: top + 'px', left: left + 'px' });
                 });
 
                 $(document).on('change', '.add-to-basket', function() {
@@ -445,13 +471,13 @@
                     <input type="button" id="logoutButton" value="Wyloguj">
                 </div>
     
-                <textarea id="cards" rows="30" cols="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
+                <textarea id="cards" rows="30" cols="115" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
 Mana Crypt
 Sol Ring"></textarea>
 
                 <div class="button-container">
                     <div class="left-button">
-                        <button type="button" id="searchButton" onclick="sendRequests()">Szukaj</button>
+                        <button type="button" id="searchButton" onclick="searchSingles()">Szukaj</button>
                     </div>
                     <div class="right-button">
                         <button type="button" id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
