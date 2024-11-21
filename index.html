@@ -290,6 +290,7 @@
             function renderResults() {
                 $('#resultBody').html('');
                 $('#result').show();
+                updateLoginState();
                 updateTotalPrice();
 
                 var hasSuccess = false;
@@ -322,11 +323,16 @@
                     }
                 });
 
+                updateLoginState();
                 updateTotalPrice();
-                $('#addToBasketButton').prop('disabled', !hasSuccess);
             }
 
             function addToBasket() {
+                if ($('.add-to-basket:checked').length === 0) {
+                    alert('Nie zaznaczono żadnych produktów!');
+                    return false;
+                }
+
                 const requests = [];
 
                 $('.add-to-basket:checked').each(function() {
@@ -377,9 +383,11 @@
                     $('#login-container').hide();
                     $('#logout-container').show();
                     $('#logged-username').text(getCredentialsItem('login'));
+                    $('#addToBasketButton').prop('disabled', false);
                 } else {
                     $('#login-container').show();
                     $('#logout-container').hide();
+                    $('#addToBasketButton').prop('disabled', true);
                 }
             }
 
