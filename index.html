@@ -213,7 +213,7 @@
 
             var results = [];
 
-            function sendRequests() {
+            function searchSingles() {
                 $('#resultBody').html('');
                 $('#result').hide();
 
@@ -228,8 +228,13 @@
 
                 $.each(lines, function (index, value) {
                     var cardNameTrimmed = value.trim().replace(/^\d+\s*/, '');
-                    console.log('Looking for:', cardNameTrimmed);
 
+                    if (cardNameTrimmed === '') {
+                        numRequests--;
+                        return true;
+                    }
+
+                    console.log('Looking for:', cardNameTrimmed);
                     $.ajax({
                         url: 'https://mtgspot.cn-panel.pl/products?s_title=' + encodeURIComponent(cardNameTrimmed) + '&limit=300&offset=0&order_by=title&sort_by=asc',
                         type: 'GET',
@@ -338,7 +343,7 @@
                             'x-api-key': api_key
                         },
                         success: function (response) {
-                            console.log('Item added to cart:', response);
+                            console.log('Item added to cart:', value.title, response);
                             window.open('https://mtgspot.pl/order', '_blank').focus();
                         },
                         error: function () {
@@ -451,7 +456,7 @@ Sol Ring"></textarea>
 
                 <div class="button-container">
                     <div class="left-button">
-                        <button type="button" id="searchButton" onclick="sendRequests()">Szukaj</button>
+                        <button type="button" id="searchButton" onclick="searchSingles()">Szukaj</button>
                     </div>
                     <div class="right-button">
                         <button type="button" id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
