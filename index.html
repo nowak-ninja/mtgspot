@@ -326,6 +326,9 @@
                     var index = $(this).data('index');
                     var value = results[index].data;
 
+                    var objToken = localStorage.getItem('objToken');
+                    var access_token = JSON.parse(objToken).access_token
+
                     $.ajax({
                         url: 'https://gateway.mtgspot.pl/api/shop/carts/single',
                         type: 'POST',
@@ -334,14 +337,15 @@
                             'id_article': value.id_article
                         },
                         headers: {
-                            'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
+                            'Authorization': 'Bearer ' + access_token,
                             'x-api-key': api_key
                         },
                         success: function (response) {
+                            console.log('Item added to cart:', response);
                             window.open('https://mtgspot.pl/order', '_blank').focus();
                         },
                         error: function () {
-                            alert('Wystąpił błąd podczas dodawania produktu do koszyka.');
+                            alert('Wystąpił błąd podczas dodawania: ' + value.title + ' do koszyka. Możliwe, że karta nie jest już dostępna.');
                         }
                     });
                 });
@@ -398,19 +402,19 @@
                             'x-api-key': api_key
                         },
                         success: function (response) {
-                            localStorage.setItem('access_token', response.access_token);
-                            console.log('Token saved!');
+                            localStorage.setItem('objToken', JSON.stringify(response));
+                            console.log('Credentials saved!');
                             updateLoginState();
                         },
                         error: function () {
-                            alert('Wystąpił błąd podczas logowania.');
+                            alert('Wystąpił błąd podczas logowania. Spróbuj ponownie.');
                         }
                     });
                 });
 
                 $(document).on('click', '#logoutButton', function() {
-                    localStorage.removeItem('access_token');
-                    console.log('Token removed!');
+                    localStorage.removeItem('objToken');
+                    console.log('Credentials removed!');
                     updateLoginState();
                 });
 
