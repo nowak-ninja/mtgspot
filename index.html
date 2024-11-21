@@ -212,7 +212,6 @@
             const api_key = 'b3d39321-5dc4-4298-98c6-0399432a948b';
 
             var results = [];
-
             function searchSingles() {
                 $('#resultBody').html('');
                 $('#result').hide();
@@ -335,7 +334,6 @@
                 }
 
                 const requests = [];
-
                 $('.add-to-basket:checked').each(function() {
                     var index = $(this).data('index');
                     var value = results[index].data;
@@ -380,7 +378,9 @@
             }
 
             function updateLoginState() {
-                if (localStorage.getItem('objToken')) {
+                const access_token = getCredentialsItem('access_token');
+
+                if (access_token) {
                     $('#login-container').hide();
                     $('#logout-container').show();
                     $('#logged-username').text(getCredentialsItem('login'));
@@ -394,6 +394,32 @@
 
             function getCredentialsItem(item) {
                 return JSON.parse(localStorage.getItem('objToken'))[item];
+            }
+
+            function setCredentials(tokenObj) {
+                // const expirationTime = Date.now() + 6 * 24 * 60 * 60 * 1000; // 6 days
+                const tokenData = {
+                    ...tokenObj,
+                    expiration: expirationTime
+                };
+                localStorage.setItem('objToken', JSON.stringify(tokenData));
+                console.log('Credentials saved with expiration.');
+            }
+
+            function getCredentialsItem(item) {
+                const tokenData = JSON.parse(localStorage.getItem('objToken'));
+                if (!tokenData) {
+                    return null;
+                }
+
+                // Check expiration
+                if (Date.now() > tokenData.expiration) {
+                    console.log('Token has expired. Clearing credentials.');
+                    localStorage.removeItem('objToken');
+                    return null;
+                }
+
+                return tokenData[item];
             }
 
             $(document).ready(function() {
@@ -447,8 +473,7 @@
                             'x-api-key': api_key
                         },
                         success: function (response) {
-                            localStorage.setItem('objToken', JSON.stringify(response));
-                            console.log('Credentials saved!');
+                            setCredentials(response);
                             updateLoginState();
                         },
                         error: function () {
