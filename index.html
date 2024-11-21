@@ -1,404 +1,435 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <title>MTG Spot Cheapest Singles</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <style>
-        * {
-            font-family: monospace;
-        }
+    <head>
+        <meta charset="utf-8">
+        <title>MTG Spot Cheapest Singles</title>
+        <link rel="icon" type="image/x-icon" href="favicon.ico">
+        <style>
+            * {
+                font-family: monospace;
+            }
 
-        .loading-overlay {
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: monospace;
-            font-size: 20px;
-            color: #333;
-            z-index: 1000;
-            display: none;
-        }
+            .loading-overlay {
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(255, 255, 255, 0.8);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                font-family: monospace;
+                font-size: 20px;
+                color: #333;
+                z-index: 1000;
+                display: none;
+            }
 
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
+            .spinner {
+                width: 50px;
+                height: 50px;
+                border: 5px solid #f3f3f3;
+                border-top: 5px solid #3498db;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-bottom: 20px;
+            }
 
-		@keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
 
-        li {
-            margin-bottom: 20px;
-        }
-        
-        table, th, td {
-            border: 0px;
-            border-collapse: collapse;
-            padding: 5px;
-        }
-        
-        tr:nth-child(even) {
-            background-color: #D6EEEE;
-        }
+            li {
+                margin-bottom: 20px;
+            }
+            
+            table, th, td {
+                border: 0px;
+                border-collapse: collapse;
+                padding: 5px;
+            }
+            
+            tr:nth-child(even) {
+                background-color: #D6EEEE;
+            }
 
-        .not-found {
-            color: #db9494
-        }
+            .not-found {
+                color: #db9494
+            }
 
-        a {
-            color: #0060B6;
-            text-decoration: none;
-        }
+            a {
+                color: #0060B6;
+                text-decoration: none;
+            }
 
-        a:hover {
-            color: #f44336;
-            text-decoration: none;
-            cursor: pointer;
-        }
+            a:hover {
+                color: #f44336;
+                text-decoration: none;
+                cursor: pointer;
+            }
 
-		.foil-text {
-			font-weight: bold;
-			color: #fff;
-			background: linear-gradient(45deg, #ffd700, #ff4d00, #00a2ff, #ff00ff);
-			background-size: 400%;
-			-webkit-background-clip: text;
-			background-clip: text;
-			color: transparent;
-			animation: foilEffect 6s linear infinite;
-		}
+            .foil-text {
+                font-weight: bold;
+                color: #fff;
+                background: linear-gradient(45deg, #ffd700, #ff4d00, #00a2ff, #ff00ff);
+                background-size: 400%;
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+                animation: foilEffect 6s linear infinite;
+            }
 
-        @keyframes foilEffect {
-			0% {
-			    background-position: 0% 50%;
-			}
-			25% {
-			    background-position: 50% 50%;
-			}
-			50% {
-			    background-position: 100% 50%;
-			}
-			75% {
-			    background-position: 50% 50%;
-			}
-			100% {
-			    background-position: 0% 50%;
-			}
-        }
+            @keyframes foilEffect {
+                0% {
+                    background-position: 0% 50%;
+                }
+                25% {
+                    background-position: 50% 50%;
+                }
+                50% {
+                    background-position: 100% 50%;
+                }
+                75% {
+                    background-position: 50% 50%;
+                }
+                100% {
+                    background-position: 0% 50%;
+                }
+            }
 
-        img {
-            border-radius: 8px;
-        }
+            img {
+                border-radius: 8px;
+            }
 
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
+            .tooltip {
+                position: relative;
+                display: inline-block;
+            }
 
-        .tooltip span {
-            display: none;
-            position: fixed;
-            overflow: hidden;
-            z-index: 999;
-        }
+            .tooltip span {
+                display: none;
+                position: fixed;
+                overflow: hidden;
+                z-index: 999;
+            }
 
-        .tooltip:hover span {
-            display: block;
-        }
+            .tooltip:hover span {
+                display: block;
+            }
 
-        .button-container {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            width: 100%;
-        }
+            .button-container {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 10px;
+                width: 100%;
+            }
 
-        #addToBasketButton {
-            background-color: #bbeebb;
-        }
+            #addToBasketButton {
+                background-color: #bbeebb;
+            }
 
-        .container {
-            display: flex;
-            align-items: flex-start;
-        }
+            .container {
+                display: flex;
+                align-items: flex-start;
+            }
 
-        #instructions {
-            margin-left: 20px;
-            max-width: 500px;
-            font-size: 14px;
-            background-color: #f9f9f9;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-    </style>
+            #instructions {
+                margin-left: 20px;
+                max-width: 500px;
+                font-size: 14px;
+                background-color: #f9f9f9;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+        </style>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
-    <script>
-        const bearer_token = 'Bearer f7199f36032451871135ef0c64b79fe055842aca';
-        const api_key = 'b3d39321-5dc4-4298-98c6-0399432a948b';
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+        <script>
+            const bearer_token = 'Bearer f7199f36032451871135ef0c64b79fe055842aca';
+            const api_key = 'b3d39321-5dc4-4298-98c6-0399432a948b';
 
-        // var currentTime = new Date().toISOString();
-        // var user_id = CryptoJS.SHA1(currentTime).toString();
-        // console.log('user_id:', user_id);
+            // var currentTime = new Date().toISOString();
+            // var user_id = CryptoJS.SHA1(currentTime).toString();
+            // console.log('user_id:', user_id);
 
-        // $.ajax({
-        //     url: 'https://mtgspot.cn-panel.pl/cart?lang=pl&user_id=' + user_id,
-        //     type: 'GET',
-        //     success: function (response) {
-        //         console.log(response);
-        //     }
-        // });
+            // $.ajax({
+            //     url: 'https://mtgspot.cn-panel.pl/cart?lang=pl&user_id=' + user_id,
+            //     type: 'GET',
+            //     success: function (response) {
+            //         console.log(response);
+            //     }
+            // });
 
-        function p() {
-            return "xxxxxxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxxxxxx".replace(/[xy]/g, function(m) {
-                const g = Math.random() * 16 | 0;
-                return (m === "x" ? g : g & 3 | 8).toString(16)
-            })
-        }
+            function p() {
+                return "xxxxxxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxxxxxx".replace(/[xy]/g, function(m) {
+                    const g = Math.random() * 16 | 0;
+                    return (m === "x" ? g : g & 3 | 8).toString(16)
+                })
+            }
 
-        user_id = p();
-        console.log(user_id);
+            user_id = p();
+            console.log(user_id);
 
-        // ----------------------------------------------------------------------------------------------------------
-        var results = [];
+            // ----------------------------------------------------------------------------------------------------------
+            var results = [];
 
-        function sendRequests() {
-            $('#resultBody').html('');
-            $('#result').hide();
+            function sendRequests() {
+                $('#resultBody').html('');
+                $('#result').hide();
 
-            $('#addToBasketButton').prop('disabled', true);
-            $('#totalPrice').text('Suma: 0.00 PLN');
+                $('#addToBasketButton').prop('disabled', true);
+                $('#totalPrice').text('Suma: 0.00 PLN');
 
-            var lines = $('#cards').val().trim().split('\n');
-            var numRequests = lines.length;
-            var completedRequests = 0;
+                var lines = $('#cards').val().trim().split('\n');
+                var numRequests = lines.length;
+                var completedRequests = 0;
 
-            results = new Array(numRequests); // Initialize results array
+                results = new Array(numRequests); // Initialize results array
 
-            $.each(lines, function (index, value) {
-                var cardNameTrimmed = value.trim().replace(/^\d+\s*/, '');
-                console.log('Looking for:', cardNameTrimmed);
+                $.each(lines, function (index, value) {
+                    var cardNameTrimmed = value.trim().replace(/^\d+\s*/, '');
+                    console.log('Looking for:', cardNameTrimmed);
 
-                $.ajax({
-                    url: 'https://mtgspot.cn-panel.pl/products?s_title=' + encodeURIComponent(cardNameTrimmed) + '&limit=300&offset=0&order_by=title&sort_by=asc',
-                    type: 'GET',
-                    success: function (response) {
-                        if (response.count > 0) {
-                            var data = response.data.filter(function(item) {
-                                return item.stock !== 0 && item.rarity !== "Tip Card" && item.rarity !== "Token";
-                            });
+                    $.ajax({
+                        url: 'https://mtgspot.cn-panel.pl/products?s_title=' + encodeURIComponent(cardNameTrimmed) + '&limit=300&offset=0&order_by=title&sort_by=asc',
+                        type: 'GET',
+                        success: function (response) {
+                            if (response.count > 0) {
+                                var data = response.data.filter(function(item) {
+                                    return item.stock !== 0 && item.rarity !== "Tip Card" && item.rarity !== "Token";
+                                });
 
-                            if (data.length > 0) {
-                                data.sort((a, b) => a.price - b.price);
+                                if (data.length > 0) {
+                                    data.sort((a, b) => a.price - b.price);
 
-                                var cheapestCard = data[0];
-                                var price = parseFloat(cheapestCard.price);
+                                    var cheapestCard = data[0];
+                                    var price = parseFloat(cheapestCard.price);
 
-                                var urlElements = [
-                                    cheapestCard.expansion_name,
-                                    cheapestCard.id_expansion,
-                                    cheapestCard.title,
-                                    cheapestCard.id_product,
-                                    cheapestCard.id_article
-                                ];
+                                    var urlElements = [
+                                        cheapestCard.expansion_name,
+                                        cheapestCard.id_expansion,
+                                        cheapestCard.title,
+                                        cheapestCard.id_product,
+                                        cheapestCard.id_article
+                                    ];
 
-                                results[index] = {
-                                    success: true,
-                                    data: cheapestCard,
-                                    price: price,
-                                    url: 'https://mtgspot.pl/single/' + urlElements.join('/')
-                                };
+                                    results[index] = {
+                                        success: true,
+                                        data: cheapestCard,
+                                        price: price,
+                                        url: 'https://mtgspot.pl/single/' + urlElements.join('/')
+                                    };
+                                } else {
+                                    results[index] = {
+                                        success: false,
+                                        cardName: cardNameTrimmed
+                                    };
+                                }
                             } else {
                                 results[index] = {
                                     success: false,
                                     cardName: cardNameTrimmed
                                 };
                             }
-                        } else {
-                            results[index] = {
-                                success: false,
-                                cardName: cardNameTrimmed
-                            };
+
+                            completedRequests++;
+
+                            if (completedRequests === numRequests) {
+                                renderResults();
+                            }
                         }
-
-                        completedRequests++;
-
-                        if (completedRequests === numRequests) {
-                            renderResults();
-                        }
-                    }
+                    });
                 });
-            });
-        }
+            }
 
-        function renderResults() {
-            $('#resultBody').html('');
-            $('#result').show();
-            updateTotalPrice();
-
-            var hasSuccess = false;
-
-            results.forEach(function(result, index) {
-                if (result && result.success) {
-                    hasSuccess = true;
-                    var cheapestCard = result.data;
-                    var price = result.price;
-
-                    $('#resultBody').append(
-                        '<tr>' +
-                            '<td>' +
-                                '<a class="tooltip" href="' + result.url + '" target="_blank">' +
-                                    cheapestCard.title +
-                                    '<span><img alt="" src="' + cheapestCard.image + '" /></span>' +
-                                '</a>' +
-                            '</td>' +
-                            '<td>' + cheapestCard.language.slice(0, 3) + '</td>' +
-                            '<td><i class="foil-text">' + (cheapestCard.is_foil ? 'foil' : '') + '</i></td>' +
-                            '<td><i style="color: red">' + (cheapestCard.is_signed ? 'signed' : '') + '</i></td>' +
-                            '<td><i style="color: green">' + (cheapestCard.is_altered ? 'alt' : '') + '</i></td>' +
-                            '<td>' + cheapestCard.expansion_name + '</td>' +
-                            '<td><b>' + price.toFixed(2) + ' PLN</b></td>' +
-                            '<td><input type="checkbox" class="add-to-basket" data-index="' + index + '" data-price="' + price + '" checked></td>' +
-                        '</tr>'
-                    );
-                } else {
-                    $('#resultBody').append('<tr><td colspan="8"><i class="not-found">' + (result ? result.cardName : '') + '</i></td></tr>');
-                }
-            });
-
-            updateTotalPrice();
-			// $('#addToBasketButton').prop('disabled', !hasSuccess);
-        }
-
-        function addToBasket() {
-            $('.add-to-basket:checked').each(function() {
-                var index = $(this).data('index');
-                var value = results[index].data;
-
-                $.ajax({
-                    url: 'https://gateway.mtgspot.pl/api/shop/carts/single',
-                    type: 'POST',
-                    data: {
-                        'quantity': 1,
-                        'id_article': value.id_article
-                    },
-                    headers: {
-                        // 'Authorization': bearer_token,
-                        'x-user-id': user_id,
-                        'x-api-key': api_key
-                    },
-                    success: function (response) {
-                        window.open('https://mtgspot.pl/order', '_blank').focus();
-                    }
-                });
-            });
-        }
-
-        function updateTotalPrice() {
-            var total = 0;
-            $('.add-to-basket:checked').each(function() {
-                var price = parseFloat($(this).data('price'));
-                total += price;
-            });
-            $('#totalPrice').text('Suma: ' + total.toFixed(2) + ' PLN');
-        }
-
-        $(document).ready(function() {
-            $(document).on('mousemove', '.tooltip', function(e) {
-                var x = e.clientX + 20;
-                var y = e.clientY + 20;
-                $(this).find('span').css({ top: y + 'px', left: x + 'px' });
-            });
-
-            $(document).on('change', '.add-to-basket', function() {
+            function renderResults() {
+                $('#resultBody').html('');
+                $('#result').show();
                 updateTotalPrice();
+
+                var hasSuccess = false;
+
+                results.forEach(function(result, index) {
+                    if (result && result.success) {
+                        hasSuccess = true;
+                        var cheapestCard = result.data;
+                        var price = result.price;
+
+                        $('#resultBody').append(
+                            '<tr>' +
+                                '<td>' +
+                                    '<a class="tooltip" href="' + result.url + '" target="_blank">' +
+                                        cheapestCard.title +
+                                        '<span><img alt="" src="' + cheapestCard.image + '" /></span>' +
+                                    '</a>' +
+                                '</td>' +
+                                '<td>' + cheapestCard.language.slice(0, 3) + '</td>' +
+                                '<td><i class="foil-text">' + (cheapestCard.is_foil ? 'foil' : '') + '</i></td>' +
+                                '<td><i style="color: red">' + (cheapestCard.is_signed ? 'signed' : '') + '</i></td>' +
+                                '<td><i style="color: green">' + (cheapestCard.is_altered ? 'alt' : '') + '</i></td>' +
+                                '<td>' + cheapestCard.expansion_name + '</td>' +
+                                '<td><b>' + price.toFixed(2) + ' PLN</b></td>' +
+                                '<td><input type="checkbox" class="add-to-basket" data-index="' + index + '" data-price="' + price + '" checked></td>' +
+                            '</tr>'
+                        );
+                    } else {
+                        $('#resultBody').append('<tr><td colspan="8"><i class="not-found">' + (result ? result.cardName : '') + '</i></td></tr>');
+                    }
+                });
+
+                updateTotalPrice();
+                $('#addToBasketButton').prop('disabled', !hasSuccess);
+            }
+
+            function addToBasket() {
+                $('.add-to-basket:checked').each(function() {
+                    var index = $(this).data('index');
+                    var value = results[index].data;
+
+                    $.ajax({
+                        url: 'https://gateway.mtgspot.pl/api/shop/carts/single',
+                        type: 'POST',
+                        data: {
+                            'quantity': 1,
+                            'id_article': value.id_article
+                        },
+                        headers: {
+                            // 'Authorization': bearer_token,
+                            'x-api-key': api_key
+                        },
+                        success: function (response) {
+                            window.open('https://mtgspot.pl/order', '_blank').focus();
+                        }
+                    });
+                });
+            }
+
+            function updateTotalPrice() {
+                var total = 0;
+
+                $('.add-to-basket:checked').each(function() {
+                    var price = parseFloat($(this).data('price'));
+                    total += price;
+                });
+
+                $('#totalPrice').text('Suma: ' + total.toFixed(2) + ' PLN');
+            }
+
+            $(document).ready(function() {
+                $(document).on('mousemove', '.tooltip', function(e) {
+                    var x = e.clientX + 20;
+                    var y = e.clientY + 20;
+                    $(this).find('span').css({ top: y + 'px', left: x + 'px' });
+                });
+
+                $(document).on('change', '.add-to-basket', function() {
+                    updateTotalPrice();
+                });
+
+                $(document).on('click', '#loginButton', function() {
+                    var username = $('#username').val();
+                    var password = $('#password').val();
+
+                    $.ajax({
+                        url: 'https://gateway.mtgspot.pl/api/shop/users/token',
+                        type: 'POST',
+                        data: {
+                            'username': username,
+                            'password': password,
+                            'grant_type': 'password',
+                            'client_id': 'MtgSpot'
+                        },
+                        headers: {
+                            'x-api-key': api_key
+                        },
+                        success: function (response) {
+                            access_token = response.access_token;
+                            token_type = response.token_type;
+                            refresh_token = response.refresh_token;
+
+                            console.log(access_token, token_type, refresh_token);
+                        }
+                    });
+                });
+
+                $(document).ajaxStart(function() {
+                    $('#loadingOverlay').show();
+                });
+        
+                $(document).ajaxStop(function() {
+                    $('#loadingOverlay').hide();
+                });
             });
+        </script>
+    </head>
 
-			$(document).ajaxStart(function() {
-				$('#loadingOverlay').show();
-			});
-	
-			$(document).ajaxStop(function() {
-				$('#loadingOverlay').hide();
-			});
-        });
-    </script>
-</head>
-
-<body>
-    <div class="container">
-        <div>
-        <textarea id="cards" rows="30" cols="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
+    <body>
+        <div class="container">
+            <div>
+                <input type="text" id="username" placeholder="Login" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <input type="password" id="password" placeholder="Hasło" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <input type="button" id="loginButton" value="Zaloguj">
+            </div>
+            <div id="search-box">
+                <textarea id="cards" rows="30" cols="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
 Mana Crypt
 Sol Ring"></textarea>
 
-        <div class="button-container">
-            <div class="left-button">
-                <button onclick="sendRequests()">Szukaj</button>
+                <div class="button-container">
+                    <div class="left-button">
+                        <button onclick="sendRequests()">Szukaj</button>
+                    </div>
+                    <div class="right-button">
+                        <button id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
+                    </div>
+                </div>
+
+                <hr />
+                <div id="loadingOverlay" class="loading-overlay">
+                    <div class="spinner"></div>
+                    <div id="ajax-message">Ładuję...</div>
+                </div>
+
+                <table id="result" style="display: none">
+                    <thead>
+                        <tr>
+                            <th>Nazwa</th>
+                            <th>Język</th>
+                            <th colspan="3"></th>
+                            <th>Dodatek</th>
+                            <th colspan="2">Cena</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultBody"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="7" style="text-align: right;">
+                                <strong id="totalPrice">Suma: 0.00 PLN</strong>
+                            </td>
+                            <td>&nbsp;</td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
-            <div class="right-button">
-                <button id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
+
+            <div id="instructions">
+                <h3>Instrukcja</h3>
+                <ol>
+                    <li>Zaloguj się na <a href="https://mtgspot.pl" target="_blank">https://mtgspot.pl</a> i wróć tutaj
+                    <li>Wprowadź karty w polu po lewej, jedna pod drugą i kliknij "Szukaj" - można wklejać :)
+                    <li>Poniżej zobaczysz listę <b>najtańszych</b> wersji kart w MTG Spot z ich cenami ułożone w tej samej kolejności jak w polu szukania
+                    <li>Pozycje w <i class="not-found">kolorze blado czerwonym</i> i bez ceny nie zostały znalezione
+                    <li>Szczegóły znalezionej karty można zobaczyć w sklepie MTG Spot klikając w jej nazwę
+                    <li>Domyślnie zaznaczone są wszystkie karty<input type="checkbox" checked onclick="return false;">
+                    <li>Możesz odznaczyć karty, których nie chcesz przed dodaniem ich do koszyka MTG Spot
+                    <li style="color: red">Dodawanie do koszyka chwilowo niedostępne!</li>
+                </ol>
+                <span style="color: #666; font-size: 12px;">Pytania i sugestie: sebastian@nowak.ninja</span>
             </div>
         </div>
-
-        <hr />
-		<div id="loadingOverlay" class="loading-overlay">
-            <div class="spinner"></div>
-    	    <div id="ajax-message">Ładuję...</div>
-	    </div>
-
-
-        <table id="result" style="display: none">
-			<thead>
-				<tr>
-					<th>Nazwa</th>
-					<th>Język</th>
-					<th colspan="3"></th>
-					<th>Dodatek</th>
-					<th colspan="2">Cena</th>
-				</tr>
-			</thead>
-            <tbody id="resultBody"></tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="7" style="text-align: right;">
-                        <strong id="totalPrice">Suma: 0.00 PLN</strong>
-                    </td>
-                    <td>&nbsp;</td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-
-    <div id="instructions">
-        <h3>Instrukcja</h3>
-        <ol>
-            <li>Zaloguj się na <a href="https://mtgspot.pl" target="_blank">https://mtgspot.pl</a> i wróć tutaj
-            <li>Wprowadź karty w polu po lewej, jedna pod drugą i kliknij "Szukaj" - można wklejać :)
-            <li>Poniżej zobaczysz listę <b>najtańszych</b> wersji kart w MTG Spot z ich cenami ułożone w tej samej kolejności jak w polu szukania
-            <li>Pozycje w <i class="not-found">kolorze blado czerwonym</i> i bez ceny nie zostały znalezione
-            <li>Szczegóły znalezionej karty można zobaczyć w sklepie MTG Spot klikając w jej nazwę
-            <li>Domyślnie zaznaczone są wszystkie karty<input type="checkbox" checked onclick="return false;">
-            <li>Możesz odznaczyć karty, których nie chcesz przed dodaniem ich do koszyka MTG Spot
-            <li style="color: red">Dodawanie do koszyka chwilowo niedostępne!</li>
-        </ol>
-        <span style="color: #666; font-size: 12px;">Pytania i sugestie: sebastian@nowak.ninja</span>
-    </div>
-    </div>
-</body>
+    </body>
 </html>
