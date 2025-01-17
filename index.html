@@ -425,7 +425,7 @@
                     expiration: expirationTime
                 };
                 localStorage.setItem('objToken', JSON.stringify(tokenData));
-                console.log('Credentials saved with expiration.');
+                console.log('Credentials saved with expiration at: ' + expirationTime);
             }
 
             function getCredentialsItem(item) {
