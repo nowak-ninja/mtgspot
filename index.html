@@ -296,6 +296,13 @@
                 var hasSuccess = false;
 
                 results.forEach(function(result, index) {
+                    var otherShops = '' +
+                        '<a href="https://allegro.pl/listing?string=' + result.cardName + '" target="_blank">allegro.pl</a>' +
+                        '<a href="https://morigal.pl/search?query=' + result.cardName + '" target="_blank">morigal.pl</a>' +
+                        '<a href="https://magicznyrynek.pl/search/?term=' + result.cardName + '" target="_blank">magicznyrynek.pl</a>' +
+                        '<a href="https://gamesmasters.pl/?s=' + result.cardName + '&post_type=product&title=1&excerpt=0&content=1&categories=1&attributes=1&tags=1&sku=1&ixwps=1" target="_blank">gamemasters.pl</a>'
+                    ;
+
                     if (result && result.success) {
                         hasSuccess = true;
                         var cheapestCard = result.data;
@@ -316,16 +323,16 @@
                                 '<td>' + cheapestCard.expansion_name + '</td>' +
                                 '<td style="text-align: right;"><b>' + price.toFixed(2) + '</b></td>' +
                                 '<td style="text-align: right;"><input type="checkbox" class="add-to-basket" data-index="' + index + '" data-price="' + price + '" checked></td>' +
-                                '<td>' +
-                                    '<a href="https://allegro.pl/listing?string=' + cheapestCard.title + '" target="_blank">allegro.pl</a>' +
-                                    '<a href="https://www.morigal.pl/search?query=' + cheapestCard.title + '" target="_blank">morigal.pl</a>' +
-                                    '<a href="https://gamesmasters.pl/?s=' + cheapestCard.title + '&post_type=product&title=1&excerpt=0&content=1&categories=1&attributes=1&tags=1&sku=1&ixwps=1" target="_blank">gamemasters.pl</a>' +
-                                    '<a href="https://magicznyrynek.pl/search/?term=' + cheapestCard.title + '" target="_blank">magicznyrynek.pl</a>' +
-                                '</td>' +
+                                '<td>' + otherShops + '</td>' +
                             '</tr>'
                         );
                     } else {
-                        $('#resultBody').append('<tr><td colspan="8"><i class="not-found">' + (result ? result.cardName : '') + '</i></td></tr>');
+                        $('#resultBody').append(
+                            '<tr>' +
+                                '<td colspan="8"><i class="not-found">' + (result ? result.cardName : '') + '</i></td>' +
+                                '<td>' + otherShops + '</td>' +
+                            '</tr>'
+                        );
                     }
                 });
 
