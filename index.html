@@ -316,6 +316,12 @@
                                 '<td>' + cheapestCard.expansion_name + '</td>' +
                                 '<td style="text-align: right;"><b>' + price.toFixed(2) + '</b></td>' +
                                 '<td style="text-align: right;"><input type="checkbox" class="add-to-basket" data-index="' + index + '" data-price="' + price + '" checked></td>' +
+                                '<td>' +
+                                    '<a href="https://allegro.pl/listing?string=' + cheapestCard.title + '" target="_blank">allegro.pl</a>' +
+                                    '<a href="https://www.morigal.pl/search?query=' + cheapestCard.title + '" target="_blank">morigal.pl</a>' +
+                                    '<a href="https://gamesmasters.pl/?s=' + cheapestCard.title + '&post_type=product&title=1&excerpt=0&content=1&categories=1&attributes=1&tags=1&sku=1&ixwps=1" target="_blank">gamemasters.pl</a>' +
+                                    '<a href="https://magicznyrynek.pl/search/?term=' + cheapestCard.title + '" target="_blank">magicznyrynek.pl</a>' +
+                                '</td>' +
                             '</tr>'
                         );
                     } else {
@@ -553,6 +559,7 @@ Sol Ring"></textarea>
                             <th>Dodatek</th>
                             <th>Cena PLN</th>
                             <th style="text-align: right;"><input type="checkbox" id="selectAll" checked></th>
+                            <th>&nbsp;</th>
                         </tr>
                     </thead>
                     <tbody id="resultBody"></tbody>
@@ -564,6 +571,7 @@ Sol Ring"></textarea>
                             <td style="text-align: right;">
                                 <strong id="totalPrice" style="color: #4b48ff;">0.00</strong>
                             </td>
+                            <td>&nbsp;</td>
                             <td>&nbsp;</td>
                         </tr>
                     </tfoot>
