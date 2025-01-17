@@ -351,7 +351,7 @@
 
             function addToBasket() {
                 if ($('.add-to-basket:checked').length === 0) {
-                    alert('Nie zaznaczono żadnych produktów!');
+                    alert('Nie zaznaczono żadnych produktów!');
                     return false;
                 }
 
@@ -360,7 +360,7 @@
                     var index = $(this).data('index');
                     var value = results[index].data;
 
-                    const ajaxReqest = $.ajax({
+                    const ajaxRequest = $.ajax({
                         url: 'https://gateway.mtgspot.pl/api/shop/carts/single',
                         type: 'POST',
                         data: {
@@ -375,17 +375,23 @@
                             console.log('Item added to cart:', value.title, response);
                         },
                         error: function () {
-                            alert('Wystąpił błąd podczas dodawania: ' + value.title + ' do koszyka. Możliwe, że karta nie jest już dostępna.');
+                            alert('Wystąpił błąd podczas dodawania: ' + value.title + ' do koszyka. Możliwe, że karta nie jest już dostępna.');
                         }
                     });
 
-                    requests.push(ajaxReqest);
+                    requests.push(ajaxRequest);
                 });
 
-                Promise.allSettled(requests).then(function() {
-                    console.log('All requests completed');
-                    window.open('https://mtgspot.pl/order', '_blank').focus();
-                });
+                Promise.allSettled(requests)
+                    .then(function(results) {
+                        console.log('All requests completed');
+                    })
+                    .catch(function(error) {
+                        console.error('Error processing requests:', error);
+                    })
+                    .finally(function() {
+                        window.open('https://mtgspot.pl/order', '_blank').focus();
+                    });
             }
 
             function updateTotalPrice() {
@@ -425,7 +431,7 @@
                     expiration: expirationTime
                 };
                 localStorage.setItem('objToken', JSON.stringify(tokenData));
-                console.log('Credentials saved with expiration at: ' + expirationTime);
+                console.log('Credentials saved with expiration at:', new Date(expirationTime));
             }
 
             function getCredentialsItem(item) {
