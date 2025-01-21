@@ -240,8 +240,12 @@
                         type: 'GET',
                         success: function (response) {
                             if (response.count > 0) {
+                                // filter cards that match exactly the input name (case-insensitive)
                                 var data = response.data.filter(function(item) {
-                                    return item.stock !== 0 && item.rarity !== "Tip Card" && item.rarity !== "Token";
+                                    return item.stock !== 0 &&
+                                        item.rarity !== "Tip Card" &&
+                                        item.rarity !== "Token" &&
+                                        item.title.toLowerCase() === cardNameTrimmed.toLowerCase();
                                 });
 
                                 if (data.length > 0) {
