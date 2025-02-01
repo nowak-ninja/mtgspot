@@ -257,7 +257,7 @@
                                     var urlElements = [
                                         cheapestCard.expansion_name,
                                         cheapestCard.id_expansion,
-                                        cheapestCard.title,
+                                        encodeURIComponent(cheapestCard.title),
                                         cheapestCard.id_product,
                                         cheapestCard.id_article
                                     ];
