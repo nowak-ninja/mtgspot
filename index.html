@@ -226,69 +226,90 @@
 
                 results = new Array(numRequests);
 
-                $.each(lines, function (index, value) {
-                    var cardNameTrimmed = value.trim().replace(/^\d+\s*/, '');
+                const maxParallelRequests = 5;
+                let currentIndex = 0;
 
-                    if (cardNameTrimmed === '') {
-                        numRequests--;
-                        return true;
-                    }
+                function processNextBatch() {
+                    const batch = lines.slice(currentIndex, currentIndex + maxParallelRequests);
+                    currentIndex += maxParallelRequests;
 
-                    console.log('Looking for:', cardNameTrimmed);
-                    $.ajax({
-                        url: 'https://mtgspot.cn-panel.pl/products?s_title=' + encodeURIComponent(cardNameTrimmed) + '&limit=300&offset=0&order_by=title&sort_by=asc',
-                        type: 'GET',
-                        success: function (response) {
-                            if (response.count > 0) {
-                                // filter cards that match exactly the input name (case-insensitive)
-                                var data = response.data.filter(function(item) {
-                                    return item.stock !== 0 &&
-                                        item.rarity !== "Tip Card" &&
-                                        item.rarity !== "Token" &&
-                                        item.title.toLowerCase() === cardNameTrimmed.toLowerCase();
-                                });
+                    const requests = batch.map((value, index) => {
+                        var cardNameTrimmed = value.trim().replace(/^\d+\s*/, '');
 
-                                if (data.length > 0) {
-                                    data.sort((a, b) => a.price - b.price);
+                        if (cardNameTrimmed === '') {
+                            numRequests--;
+                            return Promise.resolve();
+                        }
 
-                                    var cheapestCard = data[0];
-                                    var price = parseFloat(cheapestCard.price);
+                        console.log('Looking for:', cardNameTrimmed);
+                        return $.ajax({
+                            url: 'https://mtgspot.cn-panel.pl/products?s_title=' + encodeURIComponent(cardNameTrimmed) + '&limit=300&offset=0&order_by=title&sort_by=asc',
+                            type: 'GET',
+                            success: function (response) {
+                                if (response.count > 0) {
+                                    // filter cards that match exactly the input name (case-insensitive)
+                                    var data = response.data.filter(function(item) {
+                                        return item.stock !== 0 &&
+                                            item.rarity !== "Tip Card" &&
+                                            item.rarity !== "Token" &&
+                                            item.title.toLowerCase() === cardNameTrimmed.toLowerCase();
+                                    });
 
-                                    var urlElements = [
-                                        cheapestCard.expansion_name,
-                                        cheapestCard.id_expansion,
-                                        encodeURIComponent(cheapestCard.title),
-                                        cheapestCard.id_product,
-                                        cheapestCard.id_article
-                                    ];
+                                    if (data.length > 0) {
+                                        data.sort((a, b) => a.price - b.price);
 
-                                    results[index] = {
-                                        success: true,
-                                        data: cheapestCard,
-                                        price: price,
-                                        url: 'https://mtgspot.pl/single/' + urlElements.join('/')
-                                    };
+                                        var cheapestCard = data[0];
+                                        var price = parseFloat(cheapestCard.price);
+
+                                        var urlElements = [
+                                            cheapestCard.expansion_name,
+                                            cheapestCard.id_expansion,
+                                            encodeURIComponent(cheapestCard.title),
+                                            cheapestCard.id_product,
+                                            cheapestCard.id_article
+                                        ];
+
+                                        results[currentIndex - maxParallelRequests + index] = {
+                                            success: true,
+                                            data: cheapestCard,
+                                            price: price,
+                                            url: 'https://mtgspot.pl/single/' + urlElements.join('/')
+                                        };
+                                    } else {
+                                        results[currentIndex - maxParallelRequests + index] = {
+                                            success: false,
+                                            cardName: cardNameTrimmed
+                                        };
+                                    }
                                 } else {
-                                    results[index] = {
+                                    results[currentIndex - maxParallelRequests + index] = {
                                         success: false,
                                         cardName: cardNameTrimmed
                                     };
                                 }
-                            } else {
-                                results[index] = {
+                            },
+                            error: function () {
+                                results[currentIndex - maxParallelRequests + index] = {
                                     success: false,
                                     cardName: cardNameTrimmed
                                 };
                             }
-
+                        }).always(function() {
                             completedRequests++;
-
                             if (completedRequests === numRequests) {
                                 renderResults();
                             }
+                        });
+                    });
+
+                    Promise.allSettled(requests).then(() => {
+                        if (currentIndex < lines.length) {
+                            processNextBatch();
                         }
                     });
-                });
+                }
+
+                processNextBatch();
             }
 
             function renderResults() {
