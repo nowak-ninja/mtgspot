@@ -205,101 +205,144 @@
                 border: 1px solid #ddd;
                 border-radius: 4px;
             }
+
+            /* Responsive design improvements */
+            @media (max-width: 768px) {
+                .container {
+                    flex-direction: column;
+                }
+
+                #instructions {
+                    margin-left: 0;
+                    margin-top: 20px;
+                    max-width: 100%;
+                }
+
+                textarea#cards {
+                    width: 100%;
+                    cols: 50;
+                }
+
+                .button-container {
+                    flex-direction: column;
+                    gap: 10px;
+                }
+
+                table {
+                    font-size: 12px;
+                }
+
+                th, td {
+                    padding: 3px;
+                }
+            }
+
+            /* Loading states */
+            .loading {
+                opacity: 0.6;
+                pointer-events: none;
+            }
+
+            /* Error states */
+            .error {
+                border: 2px solid #ff6b6b;
+                background-color: #ffe6e6;
+            }
+
+            /* Success states */
+            .success {
+                border: 2px solid #51cf66;
+                background-color: #e6ffe6;
+            }
+
+            /* Accessibility improvements */
+            .sr-only {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border: 0;
+            }
+
+            /* Focus improvements */
+            button:focus,
+            input:focus,
+            textarea:focus {
+                outline: 2px solid #007bff;
+                outline-offset: 2px;
+            }
+
+            /* Better button states */
+            button:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+
+            button:hover:not(:disabled) {
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
         </style>
 
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script>
-            const api_key = 'b3d39321-5dc4-4298-98c6-0399432a948b';
+            // Configuration constants
+            const CONFIG = {
+                API_KEY: 'b3d39321-5dc4-4298-98c6-0399432a948b', // TODO: Move to environment variables
+                MAX_PARALLEL_REQUESTS: 5,
+                REQUEST_TIMEOUT: 10000,
+                TOKEN_EXPIRY_DAYS: 6,
+                SEARCH_LIMIT: 300
+            };
 
-            var results = [];
+            /**
+             * Search for Magic: The Gathering cards and display cheapest options
+             * Processes cards in batches to avoid overwhelming the API
+             */
             function searchSingles() {
+                // Reset UI state
                 $('#resultBody').html('');
                 $('#result').hide();
                 $('#selectAll').prop('checked', true);
-
                 $('#addToBasketButton').prop('disabled', true);
                 $('#totalPrice').text('0.00');
 
-                var lines = $('#cards').val().trim().split('\n');
-                var numRequests = lines.length;
-                var completedRequests = 0;
+                // Get and validate input
+                const cardInput = $('#cards').val().trim();
+                if (!cardInput) {
+                    alert('Proszę wprowadzić nazwy kart do wyszukania.');
+                    return;
+                }
+
+                const lines = cardInput.split('\n');
+                let numRequests = lines.length;
+                let completedRequests = 0;
 
                 results = new Array(numRequests);
 
-                const maxParallelRequests = 5;
                 let currentIndex = 0;
 
+                /**
+                 * Process cards in batches to prevent API overload
+                 */
                 function processNextBatch() {
-                    const batch = lines.slice(currentIndex, currentIndex + maxParallelRequests);
-                    currentIndex += maxParallelRequests;
+                    const batch = lines.slice(currentIndex, currentIndex + CONFIG.MAX_PARALLEL_REQUESTS);
+                    currentIndex += CONFIG.MAX_PARALLEL_REQUESTS;
 
-                    const requests = batch.map((value, index) => {
-                        var cardNameTrimmed = value.trim().replace(/^\d+\s*/, '');
+                    const requests = batch.map((cardLine, index) => {
+                        const cardName = sanitizeCardName(cardLine.trim());
 
-                        if (cardNameTrimmed === '') {
+                        if (!cardName) {
                             numRequests--;
                             return Promise.resolve();
                         }
 
-                        console.log('Looking for:', cardNameTrimmed);
-                        return $.ajax({
-                            url: 'https://mtgspot.cn-panel.pl/products?s_title=' + encodeURIComponent(cardNameTrimmed) + '&limit=300&offset=0&order_by=title&sort_by=asc',
-                            type: 'GET',
-                            success: function (response) {
-                                if (response.count > 0) {
-                                    // filter cards that match exactly the input name (case-insensitive)
-                                    var data = response.data.filter(function(item) {
-                                        return item.stock !== 0 &&
-                                            item.rarity !== "Tip Card" &&
-                                            item.rarity !== "Token" &&
-                                            item.title.toLowerCase() === cardNameTrimmed.toLowerCase();
-                                    });
-
-                                    if (data.length > 0) {
-                                        data.sort((a, b) => a.price - b.price);
-
-                                        var cheapestCard = data[0];
-                                        var price = parseFloat(cheapestCard.price);
-
-                                        var urlElements = [
-                                            cheapestCard.expansion_name,
-                                            cheapestCard.id_expansion,
-                                            encodeURIComponent(cheapestCard.title),
-                                            cheapestCard.id_product,
-                                            cheapestCard.id_article
-                                        ];
-
-                                        results[currentIndex - maxParallelRequests + index] = {
-                                            success: true,
-                                            data: cheapestCard,
-                                            price: price,
-                                            url: 'https://mtgspot.pl/single/' + urlElements.join('/')
-                                        };
-                                    } else {
-                                        results[currentIndex - maxParallelRequests + index] = {
-                                            success: false,
-                                            cardName: cardNameTrimmed
-                                        };
-                                    }
-                                } else {
-                                    results[currentIndex - maxParallelRequests + index] = {
-                                        success: false,
-                                        cardName: cardNameTrimmed
-                                    };
-                                }
-                            },
-                            error: function () {
-                                results[currentIndex - maxParallelRequests + index] = {
-                                    success: false,
-                                    cardName: cardNameTrimmed
-                                };
-                            }
-                        }).always(function() {
-                            completedRequests++;
-                            if (completedRequests === numRequests) {
-                                renderResults();
-                            }
-                        });
+                        console.log('Looking for:', cardName);
+                        return searchCard(cardName, currentIndex - CONFIG.MAX_PARALLEL_REQUESTS + index);
                     });
 
                     Promise.allSettled(requests).then(() => {
@@ -312,132 +355,313 @@
                 processNextBatch();
             }
 
+            /**
+             * Sanitize and validate card name input
+             * @param {string} input - Raw card name input
+             * @returns {string} - Cleaned card name or empty string if invalid
+             */
+            function sanitizeCardName(input) {
+                if (!input || typeof input !== 'string') return '';
+                
+                // Remove leading numbers (quantity indicators)
+                const cleaned = input.replace(/^\d+\s*/, '');
+                
+                // Basic validation - reject if contains only special characters
+                if (!/[a-zA-Z]/.test(cleaned)) return '';
+                
+                return cleaned.trim();
+            }
+
+            /**
+             * Search for a specific card via API
+             * @param {string} cardName - Name of the card to search
+             * @param {number} resultIndex - Index in results array
+             * @returns {Promise} - Ajax promise
+             */
+            function searchCard(cardName, resultIndex) {
+                return $.ajax({
+                    url: `https://mtgspot.cn-panel.pl/products?s_title=${encodeURIComponent(cardName)}&limit=${CONFIG.SEARCH_LIMIT}&offset=0&order_by=title&sort_by=asc`,
+                    type: 'GET',
+                    timeout: CONFIG.REQUEST_TIMEOUT,
+                    success: function (response) {
+                        handleSearchSuccess(response, cardName, resultIndex);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Search error for', cardName, ':', error);
+                        handleSearchError(cardName, resultIndex);
+                    }
+                }).always(() => {
+                    completedRequests++;
+                    if (completedRequests === numRequests) {
+                        renderResults();
+                    }
+                });
+            }
+
+            /**
+             * Handle successful API response
+             */
+            function handleSearchSuccess(response, cardName, resultIndex) {
+                try {
+                    if (!response || !response.count || response.count === 0) {
+                        handleSearchError(cardName, resultIndex);
+                        return;
+                    }
+
+                    // Filter cards that match exactly the input name (case-insensitive)
+                    const filteredCards = response.data.filter(item => 
+                        item.stock > 0 &&
+                        item.rarity !== "Tip Card" &&
+                        item.rarity !== "Token" &&
+                        item.title.toLowerCase() === cardName.toLowerCase()
+                    );
+
+                    if (filteredCards.length === 0) {
+                        handleSearchError(cardName, resultIndex);
+                        return;
+                    }
+
+                    // Sort by price and get cheapest
+                    filteredCards.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+                    const cheapestCard = filteredCards[0];
+                    const price = parseFloat(cheapestCard.price);
+
+                    if (isNaN(price) || price < 0) {
+                        handleSearchError(cardName, resultIndex);
+                        return;
+                    }
+
+                    const urlElements = [
+                        cheapestCard.expansion_name,
+                        cheapestCard.id_expansion,
+                        encodeURIComponent(cheapestCard.title),
+                        cheapestCard.id_product,
+                        cheapestCard.id_article
+                    ];
+
+                    results[resultIndex] = {
+                        success: true,
+                        data: cheapestCard,
+                        price: price,
+                        url: `https://mtgspot.pl/single/${urlElements.join('/')}`
+                    };
+
+                } catch (error) {
+                    console.error('Error processing search result for', cardName, ':', error);
+                    handleSearchError(cardName, resultIndex);
+                }
+            }
+
+            /**
+             * Handle search errors or no results
+             */
+            function handleSearchError(cardName, resultIndex) {
+                results[resultIndex] = {
+                    success: false,
+                    cardName: cardName
+                };
+            }
+
+            /**
+             * Render search results in the UI table
+             */
             function renderResults() {
                 $('#resultBody').html('');
                 $('#result').show();
                 updateLoginState();
                 updateTotalPrice();
 
-                var hasSuccess = false;
+                let hasResults = false;
 
-                results.forEach(function(result, index) {
+                results.forEach((result, index) => {
                     if (result && result.success) {
-                        hasSuccess = true;
-                        var cheapestCard = result.data;
-                        var price = result.price;
-
-                        var otherShops = [
-                            '<a href="https://allegro.pl/kategoria/kolekcjonerskie-magic-the-gathering-6066?string=' + cheapestCard.title + '" target="_blank">allegro.pl</a>',
-                            '<a href="https://morigal.pl/search?query=' + cheapestCard.title + '" target="_blank">morigal.pl</a>',
-                            '<a href="https://magicznyrynek.pl/search/?term=' + cheapestCard.title + '" target="_blank">magicznyrynek.pl</a>',
-                            '<a href="https://gamesmasters.pl/?s=' + cheapestCard.title + '&post_type=product&title=1&excerpt=0&content=1&categories=1&attributes=1&tags=1&sku=1&ixwps=1" target="_blank">gamemasters.pl</a>'
-                        ];
-
-                        $('#resultBody').append(
-                            '<tr>' +
-                                '<td>' +
-                                    '<a class="tooltip" href="' + result.url + '" target="_blank">' +
-                                        cheapestCard.title +
-                                        '<span><img alt="" src="' + cheapestCard.image + '" /></span>' +
-                                    '</a>' +
-                                '</td>' +
-                                '<td>' + cheapestCard.language.slice(0, 3) + '</td>' +
-                                '<td><i class="foil-text">' + (cheapestCard.is_foil ? 'foil' : '') + '</i></td>' +
-                                '<td><i style="color: red">' + (cheapestCard.is_signed ? 'signed' : '') + '</i></td>' +
-                                '<td><i style="color: green">' + (cheapestCard.is_altered ? 'alt' : '') + '</i></td>' +
-                                '<td>' + cheapestCard.expansion_name + '</td>' +
-                                '<td style="text-align: right;"><b>' + price.toFixed(2) + '</b></td>' +
-                                '<td style="text-align: right;"><input type="checkbox" class="add-to-basket" data-index="' + index + '" data-price="' + price + '" checked></td>' +
-                                '<td>&nbsp;</td>' +
-                                '<td>' + otherShops.join('&nbsp;') + '</td>' +
-                            '</tr>'
-                        );
-                    } else {
-                        var otherShops = [
-                            '<a href="https://allegro.pl/kategoria/kolekcjonerskie-magic-the-gathering-6066?string=' + result.cardName + '" target="_blank">allegro.pl</a>',
-                            '<a href="https://morigal.pl/search?query=' + result.cardName + '" target="_blank">morigal.pl</a>',
-                            '<a href="https://magicznyrynek.pl/search/?term=' + result.cardName + '" target="_blank">magicznyrynek.pl</a>',
-                            '<a href="https://gamesmasters.pl/?s=' + result.cardName + '&post_type=product&title=1&excerpt=0&content=1&categories=1&attributes=1&tags=1&sku=1&ixwps=1" target="_blank">gamemasters.pl</a>'
-                        ];
-
-                        $('#resultBody').append(
-                            '<tr>' +
-                                '<td colspan="8"><i class="not-found">' + (result ? result.cardName : '') + '</i></td>' +
-                                '<td>&nbsp;</td>' +
-                                '<td>' + otherShops.join('&nbsp;') + '</td>' +
-                            '</tr>'
-                        );
+                        hasResults = true;
+                        renderSuccessfulResult(result, index);
+                    } else if (result) {
+                        renderFailedResult(result);
                     }
                 });
+
+                // Show helpful message if no results found
+                if (!hasResults) {
+                    $('#resultBody').append(
+                        '<tr><td colspan="10" style="text-align: center; padding: 20px; color: #666;">' +
+                        'Nie znaleziono żadnych kart. Spróbuj sprawdzić pisownię nazw kart.' +
+                        '</td></tr>'
+                    );
+                }
 
                 updateLoginState();
                 updateTotalPrice();
             }
 
+            /**
+             * Render a successful search result
+             */
+            function renderSuccessfulResult(result, index) {
+                const card = result.data;
+                const price = result.price;
+                const otherShops = generateShopLinks(card.title);
+
+                $('#resultBody').append(
+                    '<tr>' +
+                        '<td>' +
+                            '<a class="tooltip" href="' + result.url + '" target="_blank" rel="noopener noreferrer">' +
+                                escapeHtml(card.title) +
+                                '<span><img alt="' + escapeHtml(card.title) + '" src="' + escapeHtml(card.image) + '" /></span>' +
+                            '</a>' +
+                        '</td>' +
+                        '<td>' + escapeHtml(card.language.slice(0, 3)) + '</td>' +
+                        '<td><i class="foil-text">' + (card.is_foil ? 'foil' : '') + '</i></td>' +
+                        '<td><i style="color: red">' + (card.is_signed ? 'signed' : '') + '</i></td>' +
+                        '<td><i style="color: green">' + (card.is_altered ? 'alt' : '') + '</i></td>' +
+                        '<td>' + escapeHtml(card.expansion_name) + '</td>' +
+                        '<td style="text-align: right;"><b>' + price.toFixed(2) + '</b></td>' +
+                        '<td style="text-align: right;"><input type="checkbox" class="add-to-basket" data-index="' + index + '" data-price="' + price + '" checked></td>' +
+                        '<td>&nbsp;</td>' +
+                        '<td>' + otherShops.join('&nbsp;') + '</td>' +
+                    '</tr>'
+                );
+            }
+
+            /**
+             * Render a failed search result
+             */
+            function renderFailedResult(result) {
+                const otherShops = generateShopLinks(result.cardName);
+
+                $('#resultBody').append(
+                    '<tr>' +
+                        '<td colspan="8"><i class="not-found">' + escapeHtml(result.cardName || 'Unknown card') + '</i></td>' +
+                        '<td>&nbsp;</td>' +
+                        '<td>' + otherShops.join('&nbsp;') + '</td>' +
+                    '</tr>'
+                );
+            }
+
+            /**
+             * Generate links to other card shops
+             */
+            function generateShopLinks(cardName) {
+                if (!cardName) return [];
+                
+                const escapedName = encodeURIComponent(cardName);
+                return [
+                    '<a href="https://allegro.pl/kategoria/kolekcjonerskie-magic-the-gathering-6066?string=' + escapedName + '" target="_blank" rel="noopener noreferrer">allegro.pl</a>',
+                    '<a href="https://morigal.pl/search?query=' + escapedName + '" target="_blank" rel="noopener noreferrer">morigal.pl</a>',
+                    '<a href="https://magicznyrynek.pl/search/?term=' + escapedName + '" target="_blank" rel="noopener noreferrer">magicznyrynek.pl</a>',
+                    '<a href="https://gamesmasters.pl/?s=' + escapedName + '&post_type=product&title=1&excerpt=0&content=1&categories=1&attributes=1&tags=1&sku=1&ixwps=1" target="_blank" rel="noopener noreferrer">gamesmasters.pl</a>'
+                ];
+            }
+
+            /**
+             * Escape HTML to prevent XSS attacks
+             */
+            function escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            /**
+             * Add selected cards to MTG Spot basket
+             */
             function addToBasket() {
-                if ($('.add-to-basket:checked').length === 0) {
+                const selectedItems = $('.add-to-basket:checked');
+                if (selectedItems.length === 0) {
                     alert('Nie zaznaczono żadnych produktów!');
                     return false;
                 }
 
-                const requests = [];
-                $('.add-to-basket:checked').each(function() {
-                    var index = $(this).data('index');
-                    var value = results[index].data;
+                // Verify user is logged in
+                if (!getCredentialsItem('access_token')) {
+                    alert('Musisz być zalogowany, aby dodać karty do koszyka!');
+                    return false;
+                }
 
-                    const ajaxRequest = $.ajax({
+                const requests = [];
+                selectedItems.each(function() {
+                    const index = $(this).data('index');
+                    const result = results[index];
+                    
+                    if (!result || !result.success || !result.data) {
+                        console.warn('Invalid result at index', index);
+                        return;
+                    }
+
+                    const card = result.data;
+                    const request = $.ajax({
                         url: 'https://gateway.mtgspot.pl/api/shop/carts/single',
                         type: 'POST',
+                        timeout: CONFIG.REQUEST_TIMEOUT,
                         data: {
                             'quantity': 1,
-                            'id_article': value.id_article
+                            'id_article': card.id_article
                         },
                         headers: {
                             'Authorization': 'Bearer ' + getCredentialsItem('access_token'),
-                            'x-api-key': api_key
+                            'x-api-key': CONFIG.API_KEY
                         },
                         success: function (response) {
-                            console.log('Item added to cart:', value.title, response);
+                            console.log('Item added to cart:', card.title, response);
                         },
-                        error: function () {
-                            alert('Wystąpił błąd podczas dodawania: ' + value.title + ' do koszyka. Możliwe, że karta nie jest już dostępna.');
+                        error: function (xhr, status, error) {
+                            console.error('Error adding to cart:', card.title, error);
+                            alert('Wystąpił błąd podczas dodawania: ' + card.title + ' do koszyka. Możliwe, że karta nie jest już dostępna.');
                         }
                     });
 
-                    requests.push(ajaxRequest);
+                    requests.push(request);
                 });
 
                 Promise.allSettled(requests)
                     .then(function(results) {
-                        console.log('All requests completed');
+                        const successCount = results.filter(r => r.status === 'fulfilled').length;
+                        const errorCount = results.length - successCount;
+                        
+                        let message = `Dodano ${successCount} z ${results.length} kart do koszyka.`;
+                        if (errorCount > 0) {
+                            message += ` ${errorCount} kart nie udało się dodać.`;
+                        }
+                        
+                        console.log(message);
                     })
                     .catch(function(error) {
-                        console.error('Error processing requests:', error);
+                        console.error('Error processing cart requests:', error);
                     })
                     .finally(function() {
-                        window.open('https://mtgspot.pl/order', '_blank').focus();
+                        window.open('https://mtgspot.pl/order', '_blank');
                     });
             }
 
+            /**
+             * Update the total price of selected items
+             */
             function updateTotalPrice() {
-                var total = 0;
+                let total = 0;
 
                 $('.add-to-basket:checked').each(function() {
-                    var price = parseFloat($(this).data('price'));
-                    total += price;
+                    const price = parseFloat($(this).data('price'));
+                    if (!isNaN(price)) {
+                        total += price;
+                    }
                 });
 
                 $('#totalPrice').text(total.toFixed(2));
             }
 
+            /**
+             * Update UI based on login state
+             */
             function updateLoginState() {
-                const access_token = getCredentialsItem('access_token');
+                const accessToken = getCredentialsItem('access_token');
 
-                if (access_token) {
+                if (accessToken) {
                     $('#login-container').hide();
                     $('#logout-container').show();
-                    $('#logged-username').text(getCredentialsItem('login'));
-                    $('#addToBasketButton').prop('disabled', false);
+                    $('#logged-username').text(getCredentialsItem('login') || 'Użytkownik');
+                    $('#addToBasketButton').prop('disabled', $('.add-to-basket:checked').length === 0);
                 } else {
                     $('#login-container').show();
                     $('#logout-container').hide();
@@ -445,34 +669,48 @@
                 }
             }
 
+            /**
+             * Get item from stored credentials with expiry check
+             */
             function getCredentialsItem(item) {
-                return JSON.parse(localStorage.getItem('objToken'))[item];
-            }
+                try {
+                    const tokenString = localStorage.getItem('objToken');
+                    if (!tokenString) return null;
 
-            function setCredentials(tokenObj) {
-                const expirationTime = Date.now() + 6 * 24 * 60 * 60 * 1000; // 6 days
-                const tokenData = {
-                    ...tokenObj,
-                    expiration: expirationTime
-                };
-                localStorage.setItem('objToken', JSON.stringify(tokenData));
-                console.log('Credentials saved with expiration at:', new Date(expirationTime));
-            }
+                    const tokenData = JSON.parse(tokenString);
+                    if (!tokenData) return null;
 
-            function getCredentialsItem(item) {
-                const tokenData = JSON.parse(localStorage.getItem('objToken'));
-                if (!tokenData) {
-                    return null;
-                }
+                    // Check expiration
+                    if (tokenData.expiration && Date.now() > tokenData.expiration) {
+                        console.log('Token has expired. Clearing credentials.');
+                        localStorage.removeItem('objToken');
+                        return null;
+                    }
 
-                // Check expiration
-                if (Date.now() > tokenData.expiration) {
-                    console.log('Token has expired. Clearing credentials.');
+                    return tokenData[item] || null;
+                } catch (error) {
+                    console.error('Error reading credentials:', error);
                     localStorage.removeItem('objToken');
                     return null;
                 }
+            }
 
-                return tokenData[item];
+            /**
+             * Store credentials with expiration time
+             */
+            function setCredentials(tokenObj) {
+                try {
+                    const expirationTime = Date.now() + (CONFIG.TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+                    const tokenData = {
+                        ...tokenObj,
+                        expiration: expirationTime
+                    };
+                    localStorage.setItem('objToken', JSON.stringify(tokenData));
+                    console.log('Credentials saved with expiration at:', new Date(expirationTime));
+                } catch (error) {
+                    console.error('Error saving credentials:', error);
+                    alert('Nie udało się zapisać danych logowania.');
+                }
             }
 
             $(document).ready(function() {
@@ -523,7 +761,7 @@
                             'client_id': 'MtgSpot'
                         },
                         headers: {
-                            'x-api-key': api_key
+                            'x-api-key': CONFIG.API_KEY
                         },
                         success: function (response) {
                             setCredentials(response);
@@ -560,7 +798,113 @@
                 $(document).ajaxStop(function() {
                     $('#loadingOverlay').hide();
                 });
+
+                // Keyboard shortcuts
+                $(document).on('keydown', function(e) {
+                    // Ctrl+Enter to search
+                    if (e.ctrlKey && e.keyCode === 13) {
+                        e.preventDefault();
+                        searchSingles();
+                    }
+                    // Escape to clear results
+                    if (e.keyCode === 27) {
+                        e.preventDefault();
+                        clearResults();
+                    }
+                });
             });
+
+            // Global variables with proper initialization
+            let results = [];
+
+            /**
+             * Handle user login with validation
+             */
+            function handleLogin() {
+                const username = $('#username').val().trim();
+                const password = $('#password').val().trim();
+
+                if (!username || !password) {
+                    alert('Proszę wprowadzić adres email i hasło.');
+                    return;
+                }
+
+                // Basic email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(username)) {
+                    alert('Proszę wprowadzić prawidłowy adres email.');
+                    return;
+                }
+
+                // Disable login button during request
+                const $loginButton = $('#loginButton');
+                const originalText = $loginButton.val();
+                $loginButton.prop('disabled', true).val('Logowanie...');
+
+                $.ajax({
+                    url: 'https://gateway.mtgspot.pl/api/shop/users/token',
+                    type: 'POST',
+                    timeout: CONFIG.REQUEST_TIMEOUT,
+                    data: {
+                        'username': username,
+                        'password': password,
+                        'grant_type': 'password',
+                        'client_id': 'MtgSpot'
+                    },
+                    headers: {
+                        'x-api-key': CONFIG.API_KEY
+                    },
+                    success: function (response) {
+                        if (response && response.access_token) {
+                            setCredentials(response);
+                            updateLoginState();
+                            // Clear password field for security
+                            $('#password').val('');
+                        } else {
+                            alert('Nieoczekiwana odpowiedź serwera. Spróbuj ponownie.');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Login error:', error, xhr.responseText);
+                        let errorMessage = 'Wystąpił błąd podczas logowania.';
+                        
+                        if (xhr.status === 401) {
+                            errorMessage = 'Nieprawidłowy adres email lub hasło.';
+                        } else if (xhr.status === 0) {
+                            errorMessage = 'Brak połączenia z serwerem. Sprawdź połączenie internetowe.';
+                        }
+                        
+                        alert(errorMessage);
+                    },
+                    complete: function() {
+                        // Re-enable login button
+                        $loginButton.prop('disabled', false).val(originalText);
+                    }
+                });
+            }
+
+            /**
+             * Handle user logout
+             */
+            function handleLogout() {
+                localStorage.removeItem('objToken');
+                console.log('User logged out');
+                updateLoginState();
+                
+                // Clear password field
+                $('#password').val('');
+            }
+
+            /**
+             * Clear search results and reset UI
+             */
+            function clearResults() {
+                $('#resultBody').html('');
+                $('#result').hide();
+                $('#cards').val('');
+                $('#totalPrice').text('0.00');
+                results = [];
+            }
         </script>
     </head>
 
@@ -568,46 +912,48 @@
         <div class="container">
             <div id="search-box">
                 <div id="login-container">
-                    <input type="text" id="username" placeholder="adres@email.pl" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                    <input type="password" id="password" placeholder="hasło" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                    <input type="button" id="loginButton" value="Zaloguj w MTG Spot">
+                    <input type="text" id="username" placeholder="adres@email.pl" autocomplete="email" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Adres email">
+                    <input type="password" id="password" placeholder="hasło" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Hasło">
+                    <input type="button" id="loginButton" value="Zaloguj w MTG Spot" aria-describedby="login-help">
                 </div>
 
-                <div id="logout-container">
-                    <span id="logged-username"></span>
-                    <input type="button" id="logoutButton" value="Wyloguj">
+                <div id="logout-container" style="display: none;">
+                    <span id="logged-username" aria-label="Zalogowany użytkownik"></span>
+                    <input type="button" id="logoutButton" value="Wyloguj" aria-label="Wyloguj z konta">
                 </div>
     
                 <textarea id="cards" rows="30" cols="115" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus placeholder="Black Lotus
 Mana Crypt
-Sol Ring"></textarea>
+Sol Ring" aria-label="Lista kart do wyszukania - jedna karta na linię"></textarea>
 
                 <div class="button-container">
                     <div class="left-button">
-                        <button type="button" id="searchButton" onclick="searchSingles()">Szukaj</button>
+                        <button type="button" id="searchButton" onclick="searchSingles()" aria-describedby="search-help">Szukaj</button>
                     </div>
                     <div class="right-button">
-                        <button type="button" id="addToBasketButton" onclick="addToBasket()" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
+                        <button type="button" id="addToBasketButton" onclick="addToBasket()" disabled aria-describedby="basket-help">Dodaj wybrane karty do koszyka MTG Spot</button>
                     </div>
                 </div>
 
                 <hr />
-                <div id="loadingOverlay" class="loading-overlay">
-                    <div class="spinner"></div>
+                <div id="loadingOverlay" class="loading-overlay" role="status" aria-live="polite">
+                    <div class="spinner" aria-hidden="true"></div>
                     <div id="ajax-message">Ładuję...</div>
                 </div>
 
-                <table id="result" style="display: none">
+                <table id="result" style="display: none" role="table" aria-label="Wyniki wyszukiwania kart">
                     <thead>
                         <tr>
-                            <th>Nazwa</th>
-                            <th>Język</th>
-                            <th colspan="3"></th>
-                            <th>Dodatek</th>
-                            <th>Cena PLN</th>
-                            <th style="text-align: right;"><input type="checkbox" id="selectAll" checked></th>
-                            <th>&nbsp;</th>
-                            <th>Szukaj także na</th>
+                            <th scope="col">Nazwa</th>
+                            <th scope="col">Język</th>
+                            <th scope="col" colspan="3">Właściwości</th>
+                            <th scope="col">Dodatek</th>
+                            <th scope="col">Cena PLN</th>
+                            <th scope="col" style="text-align: right;">
+                                <input type="checkbox" id="selectAll" checked aria-label="Zaznacz/odznacz wszystkie karty">
+                            </th>
+                            <th scope="col">&nbsp;</th>
+                            <th scope="col">Szukaj także na</th>
                         </tr>
                     </thead>
                     <tbody id="resultBody"></tbody>
@@ -617,7 +963,7 @@ Sol Ring"></textarea>
                                 <strong style="color: #4b48ff;">Suma:</strong>
                             </td>
                             <td style="text-align: right;">
-                                <strong id="totalPrice" style="color: #4b48ff;">0.00</strong>
+                                <strong id="totalPrice" style="color: #4b48ff;" aria-label="Całkowita cena wybranych kart">0.00</strong>
                             </td>
                             <td>&nbsp;</td>
                             <td>&nbsp;</td>
