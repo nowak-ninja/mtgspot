@@ -57,6 +57,7 @@ li { margin-bottom: 16px; }
 ul > li { margin: 5px 0 10px; }
 ol { padding-left: 24px; }
 #contact-email { user-select: all; }
+.source-link { display: inline-flex; align-items: center; gap: 6px; }
 .muted { color: var(--muted); font-size: 12px; }
 .not-found { color: var(--error); }
 .other-language { color: #ff2020; font-size: 20px; font-weight: bold; white-space: nowrap; }
