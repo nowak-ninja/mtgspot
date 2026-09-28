@@ -1,0 +1,97 @@
+:root {
+    color-scheme: light;
+    --background: #fff;
+    --text: #222;
+    --surface: #f5f6f7;
+    --input: #fff;
+    --border: #a6adb5;
+    --stripe: #e5f2f2;
+    --link: #0060b6;
+    --error: #a83232;
+    --success: #237238;
+    --basket: #bbeebb;
+    --muted: #555;
+}
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --background: #15191e;
+    --text: #e3e8ee;
+    --surface: #20262e;
+    --input: #191f26;
+    --border: #657180;
+    --stripe: #24343b;
+    --link: #8fcaff;
+    --error: #ffaaaa;
+    --success: #98dda6;
+    --basket: #254d35;
+    --muted: #b4bdc9;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 20px; background: var(--background); color: var(--text); font: 14px/1.5 monospace; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+h1 { font-size: 20px; margin: 0; }
+h2 { font-size: 16px; margin-top: 0; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button, input:not([type="checkbox"]), textarea, select {
+    padding: 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--input);
+}
+button { background: var(--surface); cursor: pointer; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+input[type="checkbox"] { accent-color: var(--link); }
+textarea { display: block; width: 100%; resize: vertical; min-height: 160px; }
+.container { display: flex; align-items: flex-start; gap: 20px; }
+#search-box { flex: 1; min-width: 0; }
+#instructions { flex: 0 1 380px; padding: 16px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); }
+#login-container, #logout-container, .button-container { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+#login-container input { min-width: 0; flex: 1; }
+#logout-container, .button-container { justify-content: space-between; }
+.button-container { margin-top: 10px; align-items: stretch; }
+#addToBasketButton { background: var(--basket); }
+li { margin-bottom: 16px; }
+ul > li { margin: 5px 0 10px; }
+ol { padding-left: 24px; }
+.muted { color: var(--muted); font-size: 12px; }
+.not-found, .signed { color: var(--error); }
+.altered { color: var(--success); }
+#status { margin: 12px 0; }
+.table-container { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 5px; text-align: left; }
+tbody tr:nth-child(even) { background: var(--stripe); }
+.number { text-align: right; white-space: nowrap; }
+tfoot { border-top: 1px solid var(--border); color: var(--link); }
+.other-shops { min-width: 135px; }
+.other-shops a { display: inline-block; }
+.tooltip { position: relative; display: inline-block; }
+.tooltip span { display: none; position: fixed; z-index: 10; pointer-events: none; }
+.tooltip:hover span, .tooltip:focus span { display: block; }
+.tooltip img { display: block; width: 240px; max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); object-fit: contain; border-radius: 8px; }
+.foil-text {
+    font-weight: bold;
+    background: linear-gradient(45deg, #987300, #bf4000, #0073b5, #a600a6);
+    background-size: 400%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: foil 6s linear infinite;
+}
+:root[data-theme="dark"] .foil-text { background-image: linear-gradient(45deg, #ffd700, #ff9c70, #80d0ff, #ff9cff); }
+@keyframes foil { 50% { background-position: 100% 50%; } }
+.loading-overlay { display: flex; align-items: center; gap: 10px; margin: 16px 0; }
+.spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--link); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner, .foil-text { animation: none; } }
+@media (max-width: 1000px) {
+    .container { flex-direction: column; }
+    #search-box, #instructions { width: 100%; }
+    #instructions { flex-basis: auto; }
+}
+@media (max-width: 600px) {
+    body { margin: 12px; }
+    header, #login-container, .button-container { flex-direction: column; align-items: stretch; }
+    #login-container input { width: 100%; }
+}
