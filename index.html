@@ -33,20 +33,36 @@
                 <span id="logged-username"></span>
                 <button type="button" id="logoutButton">Wyloguj</button>
             </div>
-            <label for="cards">Karty - jedna nazwa w wierszu</label>
-            <textarea id="cards" rows="25" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Black Lotus
+            <details class="market-login">
+                <summary>Logowanie do koszyka Magicznego Rynku</summary>
+                <form id="marketLoginForm">
+                    <input type="email" id="marketUsername" aria-label="Email Magiczny Rynek" placeholder="adres@email.pl" autocomplete="username" required>
+                    <input type="password" id="marketPassword" aria-label="Hasło Magiczny Rynek" placeholder="hasło" autocomplete="current-password" required>
+                    <button type="submit" id="marketLoginButton">Zaloguj</button>
+                </form>
+                <div id="marketLoggedIn" hidden><span id="marketLoggedUsername"></span><button type="button" id="marketLogoutButton">Wyloguj</button></div>
+                <small>Użyj tego samego konta tutaj i na magicznyrynek.pl. Zapamiętujemy token sesji, nie hasło.</small>
+            </details>
+            <label class="search-option"><input type="checkbox" id="includeMarket" checked> Szukaj też na Magicznym Rynku</label>
+            <textarea id="cards" aria-label="Karty - jedna nazwa w wierszu" rows="25" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Black Lotus
 Mana Crypt
 Sol Ring"></textarea>
             <div class="button-container">
                 <button type="button" id="searchButton">Szukaj</button>
-                <button type="button" id="addToBasketButton" disabled>Dodaj wybrane karty do koszyka MTG Spot</button>
             </div>
             <p id="status" role="status" aria-live="polite"></p>
-            <a id="orderLink" href="https://mtgspot.pl/order" target="_blank" rel="noopener noreferrer" hidden>Otwórz koszyk MTG Spot</a>
             <div id="loadingOverlay" class="loading-overlay" hidden>
                 <div class="spinner" aria-hidden="true"></div>
                 <span>Ładuję...</span>
             </div>
+        </section>
+        <section class="results-container" aria-label="Wyniki i koszyk">
+            <div class="cart-bar" hidden>
+                <div class="cart-total" aria-live="polite">Suma zaznaczonych kart <strong><span id="selectedPrice">0.00</span> PLN</strong><small class="selection-breakdown"></small></div>
+                <button type="button" id="addToBasketButton" class="add-to-basket-button" disabled>Dodaj zaznaczone do koszyka MTG Spot</button>
+                <button type="button" class="add-to-market-button" disabled>Dodaj zaznaczone do koszyka Magiczny Rynek</button>
+            </div>
+            <p class="reference-note muted">Cardmarket: wycena wybranego wariantu. <span id="exchangeRate"></span></p>
             <div class="table-container">
                 <table id="result" style="display: none" aria-label="Wyniki wyszukiwania">
                     <thead>
@@ -54,23 +70,25 @@ Sol Ring"></textarea>
                             <th scope="col">Nazwa</th>
                             <th scope="col">Język</th>
                             <th scope="col">Foil</th>
-                            <th scope="col">Podpis</th>
-                            <th scope="col">Alter</th>
-                            <th scope="col">Dodatek</th>
+                            <th scope="col">Stan</th>
+                            <th scope="col">Wersja / dodatek</th>
                             <th scope="col" class="number">Cena PLN</th>
                             <th scope="col" class="number"><input type="checkbox" id="selectAll" aria-label="Zaznacz wszystkie karty"></th>
+                            <th scope="col">Cardmarket <span id="referenceCurrency">PLN</span> <small>(referencyjnie)</small></th>
                             <th scope="col">Szukaj także na</th>
                         </tr>
                     </thead>
                     <tbody id="resultBody"></tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="6" class="number"><strong>Suma:</strong></td>
-                            <td class="number"><strong id="totalPrice">0.00</strong></td>
-                            <td colspan="2"></td>
-                        </tr>
-                    </tfoot>
                 </table>
+            </div>
+            <div class="cart-bar" hidden>
+                <div class="cart-total" aria-live="polite">Suma zaznaczonych kart <strong><span id="totalPrice">0.00</span> PLN</strong><small class="selection-breakdown"></small></div>
+                <button type="button" class="add-to-basket-button" disabled>Dodaj zaznaczone do koszyka MTG Spot</button>
+                <button type="button" class="add-to-market-button" disabled>Dodaj zaznaczone do koszyka Magiczny Rynek</button>
+            </div>
+            <div id="cartFeedback" class="cart-feedback" hidden>
+                <p id="cartMessage" role="status" aria-live="polite"></p>
+                <a id="orderLink" href="https://mtgspot.pl/order" target="_blank" rel="noopener noreferrer" hidden>Otwórz koszyk MTG Spot →</a>
             </div>
         </section>
         <aside id="instructions">
@@ -79,18 +97,19 @@ Sol Ring"></textarea>
                 <li>Logowanie
                     <ul>
                         <li>Do wyszukiwania kart nie musisz się logować.</li>
-                        <li>Aby dodać karty do koszyka, zaloguj się tutaj. Dane są wysyłane bezpośrednio do MTG Spot. Przeglądarka zapamiętuje token sesji, nie hasło.</li>
+                        <li>Aby dodać karty do koszyka, zaloguj się na tej stronie. Dane są wysyłane bezpośrednio do MTG Spot. Przeglądarka zapamiętuje token sesji, nie hasło.</li>
                         <li>Aby zobaczyć koszyk, zaloguj się również na <a href="https://mtgspot.pl" target="_blank" rel="noopener noreferrer">mtgspot.pl</a>.</li>
                     </ul>
                 </li>
-                <li>Wklej nazwy kart, jedna pod drugą, i kliknij „Szukaj”. Puste wiersze są pomijane. Liczby przed nazwą (np. „4 Sol Ring”) są ignorowane - każdy wiersz oznacza jedną sztukę.</li>
-                <li>Zobaczysz najtańsze dostępne wersje o dokładnie tej nazwie, w kolejności z listy. Tokeny i karty „Tip Card” są pomijane.</li>
-                <li>Przy pozycjach <span class="not-found">w kolorze czerwonym</span> zobaczysz przyczynę braku wyniku.</li>
-                <li>Kliknij nazwę karty, aby zobaczyć ją w sklepie. Najedź na nazwę lub wybierz ją klawiaturą, aby zobaczyć obrazek.</li>
-                <li>Do koszyka trafią tylko zaznaczone karty, po jednej sztuce na wiersz. Po dodaniu kliknij „Otwórz koszyk MTG Spot”.</li>
+                <li>Wklej nazwy kart, jedna pod drugą, i kliknij "Szukaj". Puste wiersze są pomijane. Liczby przed nazwą (np. "4 Sol Ring") są ignorowane - każdy wiersz oznacza jedną sztukę.</li>
+                <li>Domyślnie wybieramy <strong>najtańszą angielską wersję z MTG Spot</strong>. Jeśli jej nie ma, wybieramy inną wersję z MTG Spot; przy braku ofert tego sklepu wybieramy <a href="https://magicznyrynek.pl/" target="_blank">Magiczny Rynek</a>, również preferując angielski. Menu zawiera wszystkie dostępne oferty o dokładnie tej nazwie, posortowane ceną.</li>
+                <li>Nazwy kart <span class="not-found">w kolorze czerwonym</span> oznaczają brak dostępnej karty.</li>
+                <li>Kliknij nazwę karty, aby zobaczyć ją w sklepie.</li>
+                <li>Każdy przycisk koszyka dodaje tylko zaznaczone oferty danego sklepu, po jednej sztuce na wiersz. Po dodaniu otwórz sklep i zaloguj się na to samo konto, aby zobaczyć koszyk.</li>
             </ol>
-            <p class="muted">Pytania i sugestie: <a href="mailto:sebastian@nowak.ninja">sebastian@nowak.ninja</a></p>
+            <p class="muted">Pytania i sugestie: <span id="contact-email"></span></p>
         </aside>
     </main>
+    <div id="variantPreview" popover="manual" aria-hidden="true"><img alt=""></div>
 </body>
 </html>
